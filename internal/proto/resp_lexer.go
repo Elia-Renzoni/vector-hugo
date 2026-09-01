@@ -25,7 +25,7 @@ func NewLexer(buf []byte) Lexer {
 	}
 }
 
-func (l *Lexer) Scan() (SymbolPairs, error) {
+func (l Lexer) Scan() (SymbolPairs, error) {
 	var pairs = SymbolPairs{}
 
 	for {
