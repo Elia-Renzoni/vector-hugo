@@ -51,6 +51,26 @@ type IntegerAST struct {
 	Value  Digit64Bit
 }
 
+type BooleanAST struct {
+	Prefix PrefixSymbolAST
+	Value  Bool
+}
+
+type Bool struct {
+	Token   int
+	Literal bool
+}
+
+type FloatAST struct {
+	Prefix PrefixSymbolAST
+	Value  Float
+}
+
+type Float struct {
+	Token   int
+	Literal float64
+}
+
 type Digit64Bit struct {
 	Token   int
 	Literal int
