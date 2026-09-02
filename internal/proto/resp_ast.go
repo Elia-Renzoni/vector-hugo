@@ -16,42 +16,42 @@ var (
 )
 
 type ArrayAST struct {
-	arrLength ArrayLengthAST
-	values    []Literal
+	ArrLength ArrayLengthAST
+	Values    []Literal
 }
 
 type Literal struct {
-	bstring *BulkStringAST
-	integer *IntegerAST
+	Bstring *BulkStringAST
+	Integer *IntegerAST
 }
 
 type BulkStringAST struct {
-	prefix PrefixSymbolAST
-	length Digit64Bit
-	text   StringAST
+	Prefix PrefixSymbolAST
+	Length Digit64Bit
+	Text   StringAST
 }
 
 type StringAST struct {
-	token   int
-	literal string
+	Token   int
+	Literal string
 }
 
 type ArrayLengthAST struct {
-	prefix PrefixSymbolAST
-	length Digit64Bit
+	Prefix PrefixSymbolAST
+	Length Digit64Bit
 }
 
 type PrefixSymbolAST struct {
-	token   int
-	literal string
+	Token   int
+	Literal string
 }
 
 type IntegerAST struct {
-	prefix PrefixSymbolAST
-	value  Digit64Bit
+	Prefix PrefixSymbolAST
+	Value  Digit64Bit
 }
 
 type Digit64Bit struct {
-	token   int
-	literal int
+	Token   int
+	Literal int
 }
