@@ -38,9 +38,6 @@ func (p Parser) Parse() (ArrayAST, error) {
 
 	// parse the prefix first
 	tok, lit := p.peek()
-	if !ok {
-		return ast, ErrASTTokensFinished
-	}
 	if tok != ARRAY_TOK {
 		return ast, ErrASTInvalidArrayToken
 	}
