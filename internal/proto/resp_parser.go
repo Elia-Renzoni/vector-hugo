@@ -7,26 +7,27 @@ type Parser struct {
 	pos     int
 }
 
-func NewParser(pairs SymbolPairs) Parser {
-	return Parser{
+func NewParser(pairs SymbolPairs) *Parser {
+	return &Parser{
 		symbols: pairs,
 	}
 }
 
-func (p Parser) peek() (int, string) {
+func (p *Parser) peek() (int, string) {
 	return p.symbols.Tokens[p.pos], p.symbols.Literals[p.pos]
 }
 
 func (p *Parser) next() (int, string, bool) {
-	if p.pos >= len(p.symbols.Tokens) {
+	if p.pos+1 >= len(p.symbols.Tokens) {
 		return 0, "", false
 	}
 
-	p.pos += 1
+	p.pos++
 	return p.symbols.Tokens[p.pos], p.symbols.Literals[p.pos], true
+
 }
 
-func (p Parser) Parse() (ArrayAST, error) {
+func (p *Parser) Parse() (ArrayAST, error) {
 	var (
 		ast = ArrayAST{}
 		ok  bool
@@ -66,47 +67,46 @@ func (p Parser) Parse() (ArrayAST, error) {
 	// the remaining parts are composed by a fixed number of
 	// literals, the expected literals are boolean types,
 	// integer types and text type as well
-	literals, err := p.parseLiterals()
+	literals, err := p.parseLiterals(digit)
 	if err != nil {
-		return ArrayAST{}, nil
+		return ArrayAST{}, err
 	}
 	ast.Values = literals
 
 	return ast, nil
 }
 
-func (p Parser) parseLiterals() ([]Literal, error) {
-	var litList = make([]Literal, 0)
+func (p *Parser) parseLiterals(arrayElements int) ([]Literal, error) {
+	var litList = make([]Literal, 0, arrayElements)
 
-	// Phase 1. Parse the prefix symbol ('$' or ':')
-	tok, _, ok := p.next()
-	if !ok {
-		return nil, ErrASTTokensFinished
-	}
-
-	switch tok {
-	case BULKSTRING_TOK:
-		bs, err := p.parseBulkString()
-		if err != nil {
-			return nil, err
+	for range arrayElements {
+		tok, _, ok := p.next()
+		if !ok {
+			return nil, ErrASTTokensFinished
 		}
 
-		litList = append(litList, Literal{Bstring: bs})
-	case INTEGER_TOK:
-		intTok, err := p.parseInteger()
-		if err != nil {
-			return nil, err
+		switch tok {
+		case BULKSTRING_TOK:
+			bs, err := p.parseBulkString()
+			if err != nil {
+				return nil, err
+			}
+			litList = append(litList, Literal{Bstring: bs})
+		case INTEGER_TOK:
+			it, err := p.parseInteger()
+			if err != nil {
+				return nil, err
+			}
+			litList = append(litList, Literal{Integer: it})
+		default:
+			return nil, ErrASTInvalidSyntax
 		}
-
-		litList = append(litList, Literal{Integer: intTok})
-	default:
-		return nil, ErrASTInvalidSyntax
 	}
 
-	return p.parseLiterals()
+	return litList, nil
 }
 
-func (p Parser) parseBulkString() (*BulkStringAST, error) {
+func (p *Parser) parseBulkString() (*BulkStringAST, error) {
 	var ok bool
 	tok, lit := p.peek()
 
@@ -150,7 +150,7 @@ func (p Parser) parseBulkString() (*BulkStringAST, error) {
 	return bs, nil
 }
 
-func (p Parser) parseInteger() (*IntegerAST, error) {
+func (p *Parser) parseInteger() (*IntegerAST, error) {
 	var ok bool
 
 	// Phase 2. fetch the retained token-literal pair,
