@@ -27,14 +27,17 @@ func (p *Parser) next() (int, string, bool) {
 }
 
 func (p Parser) Parse() (ArrayAST, error) {
-	var ast = ArrayAST{}
+	var (
+		ast = ArrayAST{}
+		ok  bool
+	)
 
 	// Phase 1. Parse the first tokens of the message
 	// the first ones are the array prefix ('*') and the
 	// length of the message ('*<len>')
 
 	// parse the prefix first
-	tok, lit, ok := p.next()
+	tok, lit := p.peek()
 	if !ok {
 		return ast, ErrASTTokensFinished
 	}
