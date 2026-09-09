@@ -85,22 +85,16 @@ func (p *Parser) parseLiterals(arrayElements int) ([]Literal, error) {
 			return nil, ErrASTTokensFinished
 		}
 
-		switch tok {
-		case BULKSTRING_TOK:
-			bs, err := p.parseBulkString()
-			if err != nil {
-				return nil, err
-			}
-			litList = append(litList, Literal{Bstring: bs})
-		case INTEGER_TOK:
-			it, err := p.parseInteger()
-			if err != nil {
-				return nil, err
-			}
-			litList = append(litList, Literal{Integer: it})
-		default:
+		if tok != BULKSTRING_TOK {
 			return nil, ErrASTInvalidSyntax
 		}
+
+		bs, err := p.parseBulkString()
+		if err != nil {
+			return nil, err
+		}
+
+		litList = append(litList, Literal{Bstring: bs})
 	}
 
 	return litList, nil
@@ -148,37 +142,4 @@ func (p *Parser) parseBulkString() (*BulkStringAST, error) {
 	bs.Text.Literal = lit
 
 	return bs, nil
-}
-
-func (p *Parser) parseInteger() (*IntegerAST, error) {
-	var ok bool
-
-	// Phase 2. fetch the retained token-literal pair,
-	// that contains the symbol ':' token type and literal,
-	// and store it inside IntegerAST
-	tok, lit := p.peek()
-
-	iast := &IntegerAST{}
-	iast.Prefix.Token = tok
-	iast.Prefix.Literal = lit
-
-	// Phase 2. Parse the integer number
-	tok, lit, ok = p.next()
-	if !ok {
-		return nil, ErrASTTokensFinished
-	}
-
-	if tok != DIGIT {
-		return nil, ErrASTInvalidDigitType
-	}
-
-	digit, err := strconv.Atoi(lit)
-	if err != nil {
-		return nil, err
-	}
-
-	iast.Value.Token = tok
-	iast.Value.Literal = digit
-
-	return iast, nil
 }

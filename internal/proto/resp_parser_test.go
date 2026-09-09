@@ -14,7 +14,7 @@ func TestParser(t *testing.T) {
 		err error
 	}{
 		{
-			in: "*3\r\n$5\r\nLPUSH\r\n$6\r\nmyList\r\n:30",
+			in: "*3\r\n$5\r\nLPUSH\r\n$6\r\nmyList\r\n$2\r\n30",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -60,14 +60,18 @@ func TestParser(t *testing.T) {
 						},
 					},
 					proto.Literal{
-						Integer: &proto.IntegerAST{
+						Bstring: &proto.BulkStringAST{
 							Prefix: proto.PrefixSymbolAST{
-								Token:   proto.INTEGER_TOK,
-								Literal: ":",
+								Token:   proto.BULKSTRING_TOK,
+								Literal: "$",
 							},
-							Value: proto.Digit64Bit{
+							Length: proto.Digit64Bit{
 								Token:   proto.DIGIT,
-								Literal: 30,
+								Literal: 2,
+							},
+							Text: proto.StringAST{
+								Token:   proto.TEXT,
+								Literal: "30",
 							},
 						},
 					},
