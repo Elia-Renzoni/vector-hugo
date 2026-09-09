@@ -2,22 +2,15 @@ package proto
 
 const (
 	// RESP payload prefix tokens
-	SSTRING    = '+'
-	INTEGER    = ':'
 	BULKSTRING = '$'
 	ARRAY      = '*'
 	// RESP	protocol separators
 	LF = '\n'
 
 	SERROR = iota * 1
-	SSTRING_TOK
-	INTEGER_TOK
 	BULKSTRING_TOK
 	ARRAY_TOK
 	NULL
-	BOOLEAN
-	FLOAT
-	BIGNUMBER
 	BULKERROR
 	VERBATIMSTR
 	SET
@@ -63,7 +56,5 @@ var tokenResolver = map[string]int{
 	"SCARD":     SCARD,
 	"SPOP":      SPOP,
 	"*":         ARRAY_TOK,
-	"+":         SSTRING_TOK,
 	"$":         BULKSTRING_TOK,
-	":":         INTEGER_TOK,
 }
