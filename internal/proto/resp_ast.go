@@ -22,7 +22,6 @@ type ArrayAST struct {
 
 type Literal struct {
 	Bstring *BulkStringAST
-	Integer *IntegerAST
 }
 
 type BulkStringAST struct {
@@ -44,31 +43,6 @@ type ArrayLengthAST struct {
 type PrefixSymbolAST struct {
 	Token   int
 	Literal string
-}
-
-type IntegerAST struct {
-	Prefix PrefixSymbolAST
-	Value  Digit64Bit
-}
-
-type BooleanAST struct {
-	Prefix PrefixSymbolAST
-	Value  Bool
-}
-
-type Bool struct {
-	Token   int
-	Literal bool
-}
-
-type FloatAST struct {
-	Prefix PrefixSymbolAST
-	Value  Float
-}
-
-type Float struct {
-	Token   int
-	Literal float64
 }
 
 type Digit64Bit struct {
