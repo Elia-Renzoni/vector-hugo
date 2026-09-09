@@ -36,22 +36,13 @@ func (l Lexer) Scan() (SymbolPairs, error) {
 			char := line[0]
 
 			switch char {
-			case BULKSTRING, ARRAY, INTEGER:
+			case BULKSTRING, ARRAY:
 				lit, err := scanDigit(line[1:])
 				if err != nil {
 					return SymbolPairs{}, err
 				}
 
 				pairs.Tokens = append(pairs.Tokens, tokenResolver[string(char)], DIGIT)
-				pairs.Literals = append(pairs.Literals, string(char), lit)
-
-			case SSTRING:
-				lit, err := scanText(line[1:])
-				if err != nil {
-					return SymbolPairs{}, err
-				}
-
-				pairs.Tokens = append(pairs.Tokens, tokenResolver[string(char)], TEXT)
 				pairs.Literals = append(pairs.Literals, string(char), lit)
 
 			default:
@@ -93,15 +84,6 @@ func isText(ch byte) bool {
 func scanDigit(buf []byte) (string, error) {
 	for _, char := range buf {
 		if !isDigit(char) {
-			return "", ErrLexerInvalidLiteralType
-		}
-	}
-	return string(buf), nil
-}
-
-func scanText(buf []byte) (string, error) {
-	for _, char := range buf {
-		if !isText(char) {
 			return "", ErrLexerInvalidLiteralType
 		}
 	}
