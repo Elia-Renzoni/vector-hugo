@@ -189,6 +189,91 @@ func TestBindAST(t *testing.T) {
 			},
 			err: nil,
 		},
+		{
+			in: proto.ArrayAST{
+				ArrLength: proto.ArrayLengthAST{
+					Prefix: proto.PrefixSymbolAST{
+						Token:   proto.ARRAY_TOK,
+						Literal: "*",
+					},
+					Length: proto.Digit64Bit{
+						Token:   proto.DIGIT,
+						Literal: 4,
+					},
+				},
+				Values: []proto.Literal{
+					proto.Literal{
+						Bstring: &proto.BulkStringAST{
+							Prefix: proto.PrefixSymbolAST{
+								Token:   proto.BULKSTRING_TOK,
+								Literal: "$",
+							},
+							Length: proto.Digit64Bit{
+								Token:   proto.DIGIT,
+								Literal: 5,
+							},
+							Text: proto.StringAST{
+								Token:   proto.RPUSH,
+								Literal: "RPUSH",
+							},
+						},
+					},
+					proto.Literal{
+						Bstring: &proto.BulkStringAST{
+							Prefix: proto.PrefixSymbolAST{
+								Token:   proto.BULKSTRING_TOK,
+								Literal: "$",
+							},
+							Length: proto.Digit64Bit{
+								Token:   proto.DIGIT,
+								Literal: 6,
+							},
+							Text: proto.StringAST{
+								Token:   proto.TEXT,
+								Literal: "myList",
+							},
+						},
+					},
+					proto.Literal{
+						Bstring: &proto.BulkStringAST{
+							Prefix: proto.PrefixSymbolAST{
+								Token:   proto.BULKSTRING_TOK,
+								Literal: "$",
+							},
+							Length: proto.Digit64Bit{
+								Token:   proto.DIGIT,
+								Literal: 2,
+							},
+							Text: proto.StringAST{
+								Token:   proto.TEXT,
+								Literal: "10",
+							},
+						},
+					},
+					proto.Literal{
+						Bstring: &proto.BulkStringAST{
+							Prefix: proto.PrefixSymbolAST{
+								Token:   proto.BULKSTRING_TOK,
+								Literal: "$",
+							},
+							Length: proto.Digit64Bit{
+								Token:   proto.DIGIT,
+								Literal: 2,
+							},
+							Text: proto.StringAST{
+								Token:   proto.TEXT,
+								Literal: "20",
+							},
+						},
+					},
+				},
+			},
+			out: proto.ExecutableCommand{
+				CommandName: "RPUSH",
+				Args:        []string{"myList", "10", "20"},
+			},
+			err: nil,
+		},
 	}
 
 	for _, tt := range tests {

@@ -50,7 +50,7 @@ func BindAST(ast ArrayAST) (ExecutableCommand, error) {
 		return ExecutableCommand{}, ErrBinderExpectedCommand
 	}
 
-	if arity != arrLength-1 {
+	if arrLength-1 < arity {
 		return ExecutableCommand{}, ErrBinderArityNotEqual
 	}
 
