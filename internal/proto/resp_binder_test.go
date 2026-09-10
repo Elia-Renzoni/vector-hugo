@@ -136,6 +136,59 @@ func TestBindAST(t *testing.T) {
 			},
 			err: nil,
 		},
+		{
+			in: proto.ArrayAST{
+				ArrLength: proto.ArrayLengthAST{
+					Prefix: proto.PrefixSymbolAST{
+						Token:   proto.ARRAY_TOK,
+						Literal: "*",
+					},
+					Length: proto.Digit64Bit{
+						Token:   proto.DIGIT,
+						Literal: 2,
+					},
+				},
+				Values: []proto.Literal{
+					proto.Literal{
+						Bstring: &proto.BulkStringAST{
+							Prefix: proto.PrefixSymbolAST{
+								Token:   proto.BULKSTRING_TOK,
+								Literal: "$",
+							},
+							Length: proto.Digit64Bit{
+								Token:   proto.DIGIT,
+								Literal: 5,
+							},
+							Text: proto.StringAST{
+								Token:   proto.SCARD,
+								Literal: "SCARD",
+							},
+						},
+					},
+					proto.Literal{
+						Bstring: &proto.BulkStringAST{
+							Prefix: proto.PrefixSymbolAST{
+								Token:   proto.BULKSTRING_TOK,
+								Literal: "$",
+							},
+							Length: proto.Digit64Bit{
+								Token:   proto.DIGIT,
+								Literal: 5,
+							},
+							Text: proto.StringAST{
+								Token:   proto.TEXT,
+								Literal: "mySet",
+							},
+						},
+					},
+				},
+			},
+			out: proto.ExecutableCommand{
+				CommandName: "SCARD",
+				Args:        []string{"mySet"},
+			},
+			err: nil,
+		},
 	}
 
 	for _, tt := range tests {
