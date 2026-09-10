@@ -6,10 +6,11 @@ var (
 	ErrBinderExpectedBstring = errors.New("Expected a bulk string")
 	ErrBinderExpectedCommand = errors.New("Expected a RESP Command")
 	ErrBinderArityNotEqual   = errors.New("Arity Not Equal")
+	ErrBinderEmptyArray      = errors.New("Empty Array")
 )
 
 type ExecutableCommand struct {
-	CommandType string
+	CommandName string
 	Args        []string
 }
 
@@ -26,12 +27,12 @@ func BindAST(ast ArrayAST) (ExecutableCommand, error) {
 	arrLength := ast.ArrLength.Length.Literal
 	// read the Redis command
 	if arrLength == 0 {
-		// TODO-> define an error for this case
-		return ExecutableCommand{}, nil
+		return ExecutableCommand{}, ErrBinderEmptyArray
 	}
 
+	// fetch the redis command from the AST structure
 	respCmd := ast.Values[0]
-	if respCmd.Bstring != nil {
+	if respCmd.Bstring == nil {
 		return ExecutableCommand{}, ErrBinderExpectedBstring
 	}
 
@@ -44,7 +45,7 @@ func BindAST(ast ArrayAST) (ExecutableCommand, error) {
 		return ExecutableCommand{}, ErrBinderArityNotEqual
 	}
 
-	cmd.CommandType = respCmd.Bstring.Text.Literal
+	cmd.CommandName = respCmd.Bstring.Text.Literal
 	for _, val := range ast.Values[1:] {
 		cmd.Args = append(cmd.Args, val.Bstring.Text.Literal)
 	}
