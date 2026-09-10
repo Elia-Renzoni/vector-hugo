@@ -15,10 +15,19 @@ type ExecutableCommand struct {
 }
 
 var cmdArity = map[int]int{
-	LPUSH:  2,
-	RPUSH:  2,
-	LPUSHX: 2,
-	LPOP:   1,
+	LPUSH:     2,
+	RPUSH:     2,
+	LPUSHX:    2,
+	LPOP:      1,
+	RPOP:      1,
+	BLPOP:     2,
+	LLEN:      1,
+	SADD:      2,
+	SREM:      2,
+	SMEMBERS:  1,
+	SISMEMBER: 2,
+	SCARD:     1,
+	SPOP:      1,
 }
 
 func BindAST(ast ArrayAST) (ExecutableCommand, error) {
