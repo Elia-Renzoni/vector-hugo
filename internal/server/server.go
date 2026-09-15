@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"net"
 	"time"
 
@@ -42,14 +43,15 @@ func (v VectorHugo) ListenAndServe() error {
 
 func (v VectorHugo) handleConn(conn net.Conn) {
 	var (
-		dataBuffer = make([]byte, 1024)
+		data       = make([]byte, 1024)
 		bytesSum   = 0
+		collection = bytes.NewBuffer(make([]byte, 0))
 	)
 
 	conn.SetDeadline(v.connsDeadline)
 
 	for {
-		n, err := conn.Read(dataBuffer)
+		n, err := conn.Read(data)
 		if err != nil {
 			if ne, ok := err.(net.Error); ok && ne.Timeout() {
 				// TODO-> log the error
@@ -61,9 +63,11 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 		if bytesSum >= v.maxPacketSize {
 			break
 		}
+
+		collection.Write(data)
 	}
 
-	lex := proto.NewLexer(dataBuffer)
+	lex := proto.NewLexer(collection.Bytes())
 	tokens, err := lex.Scan()
 	if err != nil {
 		// TODO-> handle error by sending it back to the client
