@@ -62,7 +62,6 @@ func (a *Arena) Malloc(data []byte) error {
 func (a *Arena) Free() {
 }
 
-// |<h><p><h><p><h><p>| first page
 func (a *Arena) Scan(target []byte) (bool, int, error) {
 	dataReaded := 0
 	scanOffset := 8
