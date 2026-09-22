@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"bytes"
 	"errors"
 
 	"golang.org/x/sys/unix"
@@ -11,10 +12,10 @@ var (
 )
 
 type Arena struct {
-	mem      []byte
-	maxPages int
-	pageSize int
-	offset   int
+	mem        []byte
+	maxPages   int
+	pageSize   int
+	memoryUsed int
 }
 
 func NewArena() (*Arena, error) {
@@ -35,7 +36,7 @@ func NewArena() (*Arena, error) {
 }
 
 func (a *Arena) Malloc(data []byte) error {
-	if a.offset >= a.maxPages*a.pageSize || a.offset+len(data) > a.maxPages*a.pageSize {
+	if a.memoryUsed >= a.maxPages*a.pageSize || a.memoryUsed+len(data) > a.maxPages*a.pageSize {
 		return ErrArenaOverflow
 	}
 
@@ -51,10 +52,10 @@ func (a *Arena) Malloc(data []byte) error {
 
 	// store the pairs made of an header and a related payload
 	// the header indicates the length (in bytes) of the payload
-	a.mem[a.offset] = memSegment.header
-	copy(a.mem[a.offset+1:], memSegment.payload)
+	a.mem[a.memoryUsed] = memSegment.header
+	copy(a.mem[a.memoryUsed+1:], memSegment.payload)
 
-	a.offset += len(data) + 1
+	a.memoryUsed += len(data) + 1
 	return nil
 }
 
@@ -62,12 +63,25 @@ func (a *Arena) Free() {
 }
 
 // |<h><p><h><p><h><p>| first page
-func (a *Arena) Scan(dataToSeach []byte) (int, error) {
-	initialOffset := 0
-	for initialOffset < a.offset {
+func (a *Arena) Scan(target []byte) (bool, int, error) {
+	dataReaded := 0
+	scanOffset := 8
+	for scanOffset < a.memoryUsed {
+		payloadSize := int(a.mem[scanOffset])
+		payloadStart := scanOffset + 1
+		payloadEnd := payloadStart + payloadSize
+
+		data := a.mem[payloadStart:payloadEnd]
+		dataReaded += 1
+
+		if bytes.Equal(data, target) {
+			return true, dataReaded, nil
+		}
+
+		scanOffset = payloadEnd
 	}
 
-	return 0, nil
+	return false, dataReaded, nil
 }
 
 func (a *Arena) DestroyArena() {
