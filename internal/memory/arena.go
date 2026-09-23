@@ -9,7 +9,8 @@ import (
 
 var (
 	ErrArenaOverflow = errors.New("Insufficient space for storing new data")
-	ErrValueNotFound = errors.New("value not found in memory")
+	ErrValueNotFound = errors.New("Value not found in memory")
+	ErrDataTooLarge  = errors.New("Data too large")
 )
 
 type Arena struct {
@@ -44,8 +45,12 @@ func NewArena() (*Arena, error) {
 }
 
 func (a *Arena) Malloc(data []byte, allocStyle bool) error {
-	if a.memoryUsed >= a.maxPages*a.pageSize || a.memoryUsed+len(data) > a.maxPages*a.pageSize {
+	if a.memoryUsed >= a.maxPages*a.pageSize || a.memoryUsed+len(data)+1 > a.maxPages*a.pageSize {
 		return ErrArenaOverflow
+	}
+
+	if len(data) > 255 {
+		return ErrDataTooLarge
 	}
 
 	memSegment := memEntry{
@@ -70,6 +75,7 @@ func (a *Arena) Malloc(data []byte, allocStyle bool) error {
 	copy(a.mem[len(memSegment.payload)+1:], a.mem[:a.memoryUsed])
 	a.mem[0] = memSegment.header
 	copy(a.mem[1:], memSegment.payload)
+	a.memoryUsed += len(data) + 1
 
 	return nil
 }
@@ -83,23 +89,23 @@ func (a *Arena) Free(target []byte, deletionStyle bool) error {
 	// nedeed
 	if deletionStyle {
 		data := a.latestPushedEntry.payload
-		payloadStart := a.memoryUsed - len(data)
+		payloadStart := a.memoryUsed - len(data) - 1
 		clear(a.mem[payloadStart:a.memoryUsed])
-		a.memoryUsed -= len(data)
+		a.memoryUsed -= payloadStart
 		return nil
 	}
 
 	// delete the entry in the first position available,
 	// in this case shifting left the remaining data is nedeed
-	headerSize := a.mem[0]
-	clear(a.mem[:headerSize])
-	copy(a.mem[:a.memoryUsed], a.mem[headerSize:a.memoryUsed])
-	a.memoryUsed -= int(headerSize)
+	entrySize := 1 + int(a.mem[0])
+	copy(a.mem, a.mem[entrySize:a.memoryUsed])
+	a.memoryUsed -= entrySize
+	clear(a.mem[a.memoryUsed:])
 	return nil
 }
 
 func (a *Arena) freeWithTarget(target []byte) error {
-	scanOffset := 8
+	scanOffset := 0
 	found := false
 	payloadStart := 0
 	payloadEnd := 0
@@ -126,21 +132,21 @@ func (a *Arena) freeWithTarget(target []byte) error {
 
 	// Phase 2. if founded, reshape the entries by shifting them
 	// to the left after clearing the target from the pool
+	entryStart := payloadStart - 1
+	entryEnd := payloadEnd
+	entrySize := entryEnd - entryStart
 
-	// delete the header
-	clear(a.mem[payloadStart-1 : payloadStart])
-	// delete the payload
-	clear(a.mem[payloadStart:payloadEnd])
+	copy(a.mem[entryStart:], a.mem[entryEnd:a.memoryUsed])
 
-	// shift to the left the remaining items
-	copy(a.mem[payloadStart-1:], a.mem[payloadEnd:])
+	a.memoryUsed -= entrySize
+	clear(a.mem[a.memoryUsed:])
 
 	return nil
 }
 
 func (a *Arena) Scan(target []byte) (bool, int, error) {
 	dataReaded := 0
-	scanOffset := 8
+	scanOffset := 0
 	for scanOffset < a.memoryUsed {
 		payloadSize := int(a.mem[scanOffset])
 		payloadStart := scanOffset + 1
