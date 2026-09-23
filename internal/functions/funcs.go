@@ -1,40 +1,42 @@
 package functions
 
-func Lpush() {
+import "github.com/vector-hugo/internal/memory"
+
+func Lpush(bpool *memory.Arena) {
 }
 
-func Rpush() {
+func Rpush(bpool *memory.Arena) {
 }
 
-func Lpushx() {
+func Lpushx(bpool *memory.Arena) {
 }
 
-func Lpop() {
+func Lpop(bpool *memory.Arena) {
 }
 
-func Rpop() {
+func Rpop(bpool *memory.Arena) {
 }
 
-func Blpop() {
+func Blpop(bpool *memory.Arena) {
 }
 
-func Llen() {
+func Llen(bpool *memory.Arena) {
 }
 
-func Sadd() {
+func Sadd(bpool *memory.Arena) {
 }
 
-func Srem() {
+func Srem(bpool *memory.Arena) {
 }
 
-func Smembers() {
+func Smembers(bpool *memory.Arena) {
 }
 
-func Sismember() {
+func Sismember(bpool *memory.Arena) {
 }
 
-func Scard() {
+func Scard(bpool *memory.Arena) {
 }
 
-func Spop() {
+func Spop(bpool *memory.Arena) {
 }
