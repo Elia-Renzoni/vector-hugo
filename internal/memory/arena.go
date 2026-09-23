@@ -9,13 +9,21 @@ import (
 
 var (
 	ErrArenaOverflow = errors.New("Insufficient space for storing new data")
+	ErrValueNotFound = errors.New("value not found in memory")
 )
 
 type Arena struct {
-	mem        []byte
-	maxPages   int
-	pageSize   int
-	memoryUsed int
+	mem               []byte
+	maxPages          int
+	pageSize          int
+	memoryUsed        int
+	latestPushedEntry memEntry
+}
+
+// |<header>|<payload>| ... |5|hello|
+type memEntry struct {
+	header  uint8
+	payload []byte
 }
 
 func NewArena() (*Arena, error) {
@@ -35,14 +43,9 @@ func NewArena() (*Arena, error) {
 	return a, nil
 }
 
-func (a *Arena) Malloc(data []byte) error {
+func (a *Arena) Malloc(data []byte, allocStyle bool) error {
 	if a.memoryUsed >= a.maxPages*a.pageSize || a.memoryUsed+len(data) > a.maxPages*a.pageSize {
 		return ErrArenaOverflow
-	}
-
-	type memEntry struct {
-		header  uint8
-		payload []byte
 	}
 
 	memSegment := memEntry{
@@ -50,16 +53,89 @@ func (a *Arena) Malloc(data []byte) error {
 		payload: data,
 	}
 
-	// store the pairs made of an header and a related payload
-	// the header indicates the length (in bytes) of the payload
-	a.mem[a.memoryUsed] = memSegment.header
-	copy(a.mem[a.memoryUsed+1:], memSegment.payload)
+	// alloc the new data in an append fashion
+	if allocStyle {
+		// store the pairs made of an header and a related payload
+		// the header indicates the length (in bytes) of the payload
+		a.mem[a.memoryUsed] = memSegment.header
+		copy(a.mem[a.memoryUsed+1:], memSegment.payload)
 
-	a.memoryUsed += len(data) + 1
+		a.memoryUsed += len(data) + 1
+		a.latestPushedEntry = memSegment
+		return nil
+	}
+
+	// alloc the new data as the first entry
+	// and shift right the oldest entries
+	copy(a.mem[len(memSegment.payload)+1:], a.mem[:a.memoryUsed])
+	a.mem[0] = memSegment.header
+	copy(a.mem[1:], memSegment.payload)
+
 	return nil
 }
 
-func (a *Arena) Free() {
+func (a *Arena) Free(target []byte, deletionStyle bool) error {
+	if target != nil {
+		return a.freeWithTarget(target)
+	}
+
+	// delete the entry in the latest page, no reshape
+	// nedeed
+	if deletionStyle {
+		data := a.latestPushedEntry.payload
+		payloadStart := a.memoryUsed - len(data)
+		clear(a.mem[payloadStart:a.memoryUsed])
+		a.memoryUsed -= len(data)
+		return nil
+	}
+
+	// delete the entry in the first position available,
+	// in this case shifting left the remaining data is nedeed
+	headerSize := a.mem[0]
+	clear(a.mem[:headerSize])
+	copy(a.mem[:a.memoryUsed], a.mem[headerSize:a.memoryUsed])
+	a.memoryUsed -= int(headerSize)
+	return nil
+}
+
+func (a *Arena) freeWithTarget(target []byte) error {
+	scanOffset := 8
+	found := false
+	payloadStart := 0
+	payloadEnd := 0
+
+	// Phase 1. search the target data in the buffer pool
+	for scanOffset < a.memoryUsed {
+		payloadSize := int(a.mem[scanOffset])
+		payloadStart = scanOffset + 1
+		payloadEnd = payloadStart + payloadSize
+
+		data := a.mem[payloadStart:payloadEnd]
+
+		if bytes.Equal(data, target) {
+			found = true
+			break
+		}
+
+		scanOffset = payloadEnd
+	}
+
+	if !found {
+		return ErrValueNotFound
+	}
+
+	// Phase 2. if founded, reshape the entries by shifting them
+	// to the left after clearing the target from the pool
+
+	// delete the header
+	clear(a.mem[payloadStart-1 : payloadStart])
+	// delete the payload
+	clear(a.mem[payloadStart:payloadEnd])
+
+	// shift to the left the remaining items
+	copy(a.mem[payloadStart-1:], a.mem[payloadEnd:])
+
+	return nil
 }
 
 func (a *Arena) Scan(target []byte) (bool, int, error) {
