@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"net"
+	"strconv"
 	"time"
 
 	"github.com/vector-hugo/internal/functions"
@@ -107,10 +108,25 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 		//TODO
 	}
 
+	var (
+		err error
+		n   int = -1
+	)
 	switch t := execFunc.(type) {
 	case functions.FlatFunc:
-		t(mem)
+		n, err = t(mem)
 	case functions.ModFunc:
-		t(mem, command.Args[1:])
+		err = t(mem, command.Args[1:])
+	}
+
+	if err != nil {
+		conn.Write([]byte(err.Error()))
+	} else {
+		if n == -1 {
+			conn.Write([]byte("+OK"))
+		} else {
+			conv := strconv.Itoa(n)
+			conn.Write([]byte(conv))
+		}
 	}
 }
