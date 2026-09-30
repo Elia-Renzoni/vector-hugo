@@ -103,9 +103,10 @@ func TestList(t *testing.T) {
 			arena.Free(nil, true)
 		}
 
-		_, n, _ := arena.Scan(nil)
-		if n != 0 {
-			t.Fatalf("expected 0 got %d", n)
+		ok, _, _ := arena.Scan([]byte("30322"))
+		ok, _, _ = arena.Scan([]byte("foobarmock"))
+		if ok != false {
+			t.Fatalf("expected 0 got %t", ok)
 		}
 	})
 

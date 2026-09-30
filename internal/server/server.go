@@ -17,6 +17,7 @@ type VectorHugo struct {
 	listenPort    int
 	connsDeadline time.Time
 	maxPacketSize int // 16kb
+	dbs           *router.ListDB
 }
 
 func NewServer(ipAddr net.IP, listenPort int, deadline time.Time, maxPacketSize int) VectorHugo {
@@ -25,6 +26,7 @@ func NewServer(ipAddr net.IP, listenPort int, deadline time.Time, maxPacketSize 
 		listenPort:    listenPort,
 		connsDeadline: deadline,
 		maxPacketSize: maxPacketSize,
+		dbs:           router.NewListDB(),
 	}
 }
 
@@ -92,26 +94,22 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 	}
 
 	execFunc := functions.GetFunc(command)
-	dbs := router.ListDB{}
-
 	var mem *memory.Arena
 
 	// find the database correct database for
 	// the given data structure
 	if command.CommandName != "LPUSHX" {
-		mem, err = dbs.Route(command.Args[0], false)
+		mem, err = v.dbs.Route(command.Args[0], false)
 	} else {
-		mem, err = dbs.Route(command.Args[0], true)
+		mem, err = v.dbs.Route(command.Args[0], true)
 	}
 
 	if err != nil {
 		//TODO
 	}
 
-	var (
-		err error
-		n   int = -1
-	)
+	var n int = -1
+
 	switch t := execFunc.(type) {
 	case functions.FlatFunc:
 		n, err = t(mem)
