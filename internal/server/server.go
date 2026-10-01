@@ -13,25 +13,25 @@ import (
 )
 
 type VectorHugo struct {
-	address       net.IP
-	listenPort    int
-	connsDeadline time.Time
-	maxPacketSize int // 16kb
+	Address       net.IP
+	ListenPort    int
+	ConnsDeadline time.Time
+	MaxPacketSize int // 16kb
 	dbs           *router.ListDB
 }
 
 func NewServer(ipAddr net.IP, listenPort int, deadline time.Time, maxPacketSize int) VectorHugo {
 	return VectorHugo{
-		address:       ipAddr,
-		listenPort:    listenPort,
-		connsDeadline: deadline,
-		maxPacketSize: maxPacketSize,
+		Address:       ipAddr,
+		ListenPort:    listenPort,
+		ConnsDeadline: deadline,
+		MaxPacketSize: maxPacketSize,
 		dbs:           router.NewListDB(),
 	}
 }
 
 func (v VectorHugo) ListenAndServe() error {
-	listener, err := net.Listen("tcp", v.address.To4().String())
+	listener, err := net.Listen("tcp", v.Address.To4().String())
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 		collection = bytes.NewBuffer(make([]byte, 0))
 	)
 
-	conn.SetDeadline(v.connsDeadline)
+	conn.SetDeadline(v.ConnsDeadline)
 
 	for {
 		n, err := conn.Read(data)
@@ -66,7 +66,7 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 		}
 
 		bytesSum += n
-		if bytesSum >= v.maxPacketSize {
+		if bytesSum >= v.MaxPacketSize {
 			break
 		}
 
