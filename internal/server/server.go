@@ -54,6 +54,7 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 		collection = bytes.NewBuffer(make([]byte, 0))
 	)
 
+	defer conn.Close()
 	conn.SetDeadline(v.ConnsDeadline)
 
 	for {
