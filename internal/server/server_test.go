@@ -14,7 +14,7 @@ import (
 
 func setupRedisClient() *rdb.Client {
 	return rdb.NewClient(&rdb.Options{
-		Addr:     "localhost:6379",
+		Addr:     "127.0.0.1:6379",
 		Password: "",
 		DB:       0,
 		Protocol: 2,
@@ -47,7 +47,7 @@ func TestServer(t *testing.T) {
 		tests := []struct {
 			in struct {
 				dbName   string
-				dbValues []string
+				dbValues []any
 			}
 			cmdMod   CmdModifyState
 			cmdFetch CmdFetchState
@@ -56,35 +56,35 @@ func TestServer(t *testing.T) {
 			{
 				in: struct {
 					dbName   string
-					dbValues []string
+					dbValues []any
 				}{
 					dbName:   "test1",
-					dbValues: []string{"tvalue1", "tvalue2"},
+					dbValues: []any{"tvalue1", "tvalue2"},
 				},
 				cmdMod: client.LPush,
-				expOut: rdb.NewIntResult(0, nil),
+				expOut: rdb.NewIntResult(2, nil),
 			},
 			{
 				in: struct {
 					dbName   string
-					dbValues []string
+					dbValues []any
 				}{
 					dbName:   "test2",
-					dbValues: []string{"test"},
+					dbValues: []any{"test"},
 				},
 				cmdMod: client.RPush,
-				expOut: rdb.NewIntResult(0, nil),
+				expOut: rdb.NewIntResult(1, nil),
 			},
 			{
 				in: struct {
 					dbName   string
-					dbValues []string
+					dbValues []any
 				}{
 					dbName:   "test2",
 					dbValues: nil,
 				},
 				cmdFetch: client.LLen,
-				expOut:   rdb.NewIntResult(0, nil),
+				expOut:   rdb.NewIntResult(1, nil),
 			},
 		}
 
@@ -93,7 +93,7 @@ func TestServer(t *testing.T) {
 			if tt.cmdFetch != nil {
 				got = tt.cmdFetch(context.Background(), tt.in.dbName)
 			} else if tt.cmdMod != nil {
-				got = tt.cmdMod(context.Background(), tt.in.dbName, tt.in.dbValues)
+				got = tt.cmdMod(context.Background(), tt.in.dbName, tt.in.dbValues...)
 			}
 
 			if !reflect.DeepEqual(got, tt.expOut) {
