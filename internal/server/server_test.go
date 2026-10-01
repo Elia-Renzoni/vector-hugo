@@ -39,7 +39,7 @@ func TestServer(t *testing.T) {
 	client := setupRedisClient()
 	server := setupVectorHugoServer()
 
-	server.ListenAndServe()
+	go server.ListenAndServe()
 
 	time.Sleep(3 * time.Second)
 
