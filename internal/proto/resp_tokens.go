@@ -6,6 +6,7 @@ const (
 	ARRAY      = '*'
 	// RESP	protocol separators
 	LF = '\n'
+	CR = '\r'
 
 	SERROR = iota * 1
 	BULKSTRING_TOK

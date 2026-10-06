@@ -19,54 +19,59 @@ type SymbolPairs struct {
 	Literals []string
 }
 
-func NewLexer(buf []byte) Lexer {
-	return Lexer{
-		inputBuffer: bytes.NewBuffer(buf),
+func NewLexer() *Lexer {
+	return &Lexer{
+		inputBuffer: &bytes.Buffer{},
 	}
+}
+
+func (l *Lexer) addNewBuffer(buf []byte) {
+	l.inputBuffer.Reset()
+	l.inputBuffer.Write(buf)
 }
 
 func (l Lexer) Scan() (SymbolPairs, error) {
 	var pairs = SymbolPairs{}
 
 	for {
-		line, err := l.inputBuffer.ReadBytes(LF)
-		line = bytes.TrimRight(line, "\r\n")
-
-		if len(line) > 0 {
-			char := line[0]
-
-			switch char {
-			case BULKSTRING, ARRAY:
-				lit, err := scanDigit(line[1:])
-				if err != nil {
-					return SymbolPairs{}, err
-				}
-
-				pairs.Tokens = append(pairs.Tokens, tokenResolver[string(char)], DIGIT)
-				pairs.Literals = append(pairs.Literals, string(char), lit)
-
-			default:
-				lit, err := scanLiteral(line)
-				if err != nil {
-					return SymbolPairs{}, err
-				}
-
-				token, ok := tokenResolver[lit]
-				if !ok {
-					pairs.Tokens = append(pairs.Tokens, TEXT)
-				} else {
-					pairs.Tokens = append(pairs.Tokens, token)
-				}
-
-				pairs.Literals = append(pairs.Literals, lit)
-			}
+		char, err := l.inputBuffer.ReadByte()
+		if errors.Is(err, io.EOF) {
+			break
 		}
 
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
+		switch char {
+		case BULKSTRING, ARRAY:
+			pairs.Tokens = append(pairs.Tokens, tokenResolver[string(char)], DIGIT)
+		case CR, LF:
+			continue
+		default:
+			var latestToken int = 0
+			if len(pairs.Tokens) > 0 {
+				latestToken = len(pairs.Tokens) - 1
 			}
-			return SymbolPairs{}, err
+
+			switch latestToken {
+			case BULKSTRING, ARRAY:
+				if !isDigit(char) {
+					return SymbolPairs{}, ErrLexerInvalidLiteralType
+				}
+
+				pairs.Tokens = append(pairs.Tokens, DIGIT)
+				pairs.Literals = append(pairs.Literals, string(char))
+			}
+
+			if err != nil {
+				return SymbolPairs{}, err
+			}
+
+			token, ok := tokenResolver[lit]
+			if !ok {
+				pairs.Tokens = append(pairs.Tokens, TEXT)
+			} else {
+				pairs.Tokens = append(pairs.Tokens, token)
+			}
+
+			pairs.Literals = append(pairs.Literals, lit)
 		}
 	}
 
