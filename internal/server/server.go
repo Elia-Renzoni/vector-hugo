@@ -2,8 +2,7 @@ package server
 
 import (
 	"bytes"
-	"errors"
-	"io"
+	"fmt"
 	"net"
 	"strconv"
 	"time"
@@ -19,7 +18,7 @@ type VectorHugo struct {
 	ListenPort    int
 	ConnsDeadline time.Time
 	MaxPacketSize int // 16kb
-	dbs           *router.ListDB
+	Dbs           *router.ListDB
 }
 
 func NewServer(ipAddr net.IP, listenPort int, deadline time.Time, maxPacketSize int) VectorHugo {
@@ -28,12 +27,13 @@ func NewServer(ipAddr net.IP, listenPort int, deadline time.Time, maxPacketSize 
 		ListenPort:    listenPort,
 		ConnsDeadline: deadline,
 		MaxPacketSize: maxPacketSize,
-		dbs:           router.NewListDB(),
+		Dbs:           router.NewListDB(),
 	}
 }
 
 func (v VectorHugo) ListenAndServe() error {
-	listener, err := net.Listen("tcp", v.Address.To4().String())
+	addr := net.JoinHostPort(v.Address.String(), strconv.Itoa(v.ListenPort))
+	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}
@@ -51,67 +51,63 @@ func (v VectorHugo) ListenAndServe() error {
 
 func (v VectorHugo) handleConn(conn net.Conn) {
 	var (
-		data        = make([]byte, 1024)
-		bytesSum    = 0
-		collection  = bytes.NewBuffer(make([]byte, 0))
-		chunker     proto.Chunks
-		totalChunks int
+		data       = make([]byte, 1024)
+		bytesSum   = 0
+		collection = bytes.NewBuffer(make([]byte, 0))
+		chunker    proto.Chunks
+		totalLines int
 	)
 
 	defer conn.Close()
 	conn.SetDeadline(v.ConnsDeadline)
 
 	for {
-		if chunker.ChunksCompleted(totalChunks) && totalChunks != 0 {
-			break
-		}
-
 		n, err := conn.Read(data)
 		if err != nil {
-			if ne, ok := err.(net.Error); ok && ne.Timeout() {
-				// TODO-> log the error
-			}
 			return
 		}
 
-		if totalChunks == 0 {
-			waiterCh, err := proto.ReadWaiterChar(data[:n])
-			if !errors.Is(err, io.EOF) {
-				// TODO log the error
+		bytesSum += n
+		if bytesSum > v.MaxPacketSize {
+			return
+		}
+		collection.Write(data[:n])
+
+		if totalLines == 0 {
+			elems, ok, err := proto.ReadArrayLen(collection.Bytes())
+			if err != nil {
 				return
 			}
-
-			if waiterCh > 0 {
-				totalChunks = waiterCh
+			if !ok {
+				continue
 			}
+			totalLines = 1 + 2*elems
 		}
 
-		bytesSum += n
-		if bytesSum >= v.MaxPacketSize {
+		chunker.CountCompleteDataChunks(collection.Bytes())
+		fmt.Println(collection.String())
+		if chunker.ChunksCompleted(totalLines) {
 			break
 		}
-
-		collection.Write(data)
-		chunker.CountCompleteDataChunks(collection.Bytes())
 	}
 
 	lex := proto.NewLexer(collection.Bytes())
 	tokens, err := lex.Scan()
 	if err != nil {
-		// TODO-> handle error by sending it back to the client
+		conn.Write([]byte("-ERR lexer: " + err.Error() + "\r\n"))
 		return
 	}
 
 	parser := proto.NewParser(tokens)
 	ast, err := parser.Parse()
 	if err != nil {
-		// TODO-> handle error by sending it back to the client
+		conn.Write([]byte("-ERR parser: " + err.Error() + "\r\n"))
 		return
 	}
 
 	command, err := proto.BindAST(ast)
 	if err != nil {
-		// TODO-> handle error by sending it back to the client
+		conn.Write([]byte("-ERR binder: " + err.Error() + "\r\n"))
 		return
 	}
 
@@ -120,14 +116,15 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 
 	// find the database correct database for
 	// the given data structure
-	if command.CommandName != "LPUSHX" {
-		mem, err = v.dbs.Route(command.Args[0], false)
+	if command.CommandName != "lpushx" {
+		mem, err = v.Dbs.Route(command.Args[0], false)
 	} else {
-		mem, err = v.dbs.Route(command.Args[0], true)
+		mem, err = v.Dbs.Route(command.Args[0], true)
 	}
 
 	if err != nil {
-		//TODO
+		conn.Write([]byte("-ERR router: " + err.Error() + "\r\n"))
+		return
 	}
 
 	var n int = -1
@@ -140,13 +137,12 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 	}
 
 	if err != nil {
-		conn.Write([]byte(err.Error()))
+		conn.Write([]byte("-ERR cmd: " + err.Error() + "\r\n"))
 	} else {
 		if n == -1 {
-			conn.Write([]byte("+OK"))
+			conn.Write([]byte("+OK\r\n"))
 		} else {
-			conv := strconv.Itoa(n)
-			conn.Write([]byte(conv))
+			conn.Write([]byte(":" + strconv.Itoa(n) + "\r\n"))
 		}
 	}
 }

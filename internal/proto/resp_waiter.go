@@ -2,34 +2,34 @@ package proto
 
 import (
 	"bytes"
+	"errors"
+	"strconv"
 )
 
-func ReadWaiterChar(data []byte) (int, error) {
-	input := bytes.NewBuffer(data)
-	arrayCharFound := false
-	for {
-		char, err := input.ReadByte()
-		if err != nil {
-			return 0, err
-		}
-
-		if char == ARRAY {
-			arrayCharFound = true
-			continue
-		}
-
-		if arrayCharFound && char != ARRAY && isDigit(char) {
-			return int(char), nil
-		}
+func ReadArrayLen(data []byte) (int, bool, error) {
+	if len(data) == 0 {
+		return 0, false, nil
 	}
+	if data[0] != ARRAY {
+		return 0, false, errors.New("expected array")
+	}
+	line, _, found := bytes.Cut(data[1:], []byte("\r\n"))
+	if !found {
+		return 0, false, nil
+	}
+	n, err := strconv.Atoi(string(line))
+	if err != nil {
+		return 0, false, err
+	}
+	return n, true, nil
 }
 
 type Chunks int
 
-func (c Chunks) CountCompleteDataChunks(data []byte) {
+func (c *Chunks) CountCompleteDataChunks(data []byte) {
 	n := bytes.Count(data, []byte("\r\n"))
 	if n > 0 {
-		c = Chunks(n)
+		*c = Chunks(n)
 	}
 }
 

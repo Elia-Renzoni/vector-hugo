@@ -7,17 +7,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/vector-hugo/internal/router"
 	"github.com/vector-hugo/internal/server"
 
-	rdb "github.com/redis/go-redis/v9"
+	rdb "github.com/go-redis/redis/v8"
 )
 
 func setupRedisClient() *rdb.Client {
 	return rdb.NewClient(&rdb.Options{
-		Addr:     "127.0.0.1:6379",
-		Password: "",
-		DB:       0,
-		Protocol: 2,
+		Addr: "127.0.0.1:6379",
+		DB:   0,
 	})
 }
 
@@ -27,6 +26,7 @@ func setupVectorHugoServer() server.VectorHugo {
 		ListenPort:    6379,
 		ConnsDeadline: time.Time{},
 		MaxPacketSize: 16000,
+		Dbs:           router.NewListDB(),
 	}
 }
 
@@ -39,7 +39,11 @@ func TestServer(t *testing.T) {
 	client := setupRedisClient()
 	server := setupVectorHugoServer()
 
-	go server.ListenAndServe()
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			t.Errorf("ListenAndServe: %v", err)
+		}
+	}()
 
 	time.Sleep(3 * time.Second)
 

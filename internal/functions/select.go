@@ -1,6 +1,8 @@
 package functions
 
 import (
+	"strings"
+
 	"github.com/vector-hugo/internal/memory"
 	"github.com/vector-hugo/internal/proto"
 )
@@ -11,7 +13,7 @@ type (
 )
 
 func GetFunc(cmd proto.ExecutableCommand) any {
-	switch cmd.CommandName {
+	switch strings.ToUpper(cmd.CommandName) {
 	case "LPUSH":
 		return Lpush
 	case "RPUSH":
