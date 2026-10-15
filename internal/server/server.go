@@ -2,6 +2,8 @@ package server
 
 import (
 	"bytes"
+	"errors"
+	"io"
 	"net"
 	"strconv"
 	"time"
@@ -49,15 +51,21 @@ func (v VectorHugo) ListenAndServe() error {
 
 func (v VectorHugo) handleConn(conn net.Conn) {
 	var (
-		data       = make([]byte, 1024)
-		bytesSum   = 0
-		collection = bytes.NewBuffer(make([]byte, 0))
+		data        = make([]byte, 1024)
+		bytesSum    = 0
+		collection  = bytes.NewBuffer(make([]byte, 0))
+		chunker     proto.Chunks
+		totalChunks int
 	)
 
 	defer conn.Close()
 	conn.SetDeadline(v.ConnsDeadline)
 
 	for {
+		if chunker.ChunksCompleted(totalChunks) && totalChunks != 0 {
+			break
+		}
+
 		n, err := conn.Read(data)
 		if err != nil {
 			if ne, ok := err.(net.Error); ok && ne.Timeout() {
@@ -66,12 +74,25 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 			return
 		}
 
+		if totalChunks == 0 {
+			waiterCh, err := proto.ReadWaiterChar(data[:n])
+			if !errors.Is(err, io.EOF) {
+				// TODO log the error
+				return
+			}
+
+			if waiterCh > 0 {
+				totalChunks = waiterCh
+			}
+		}
+
 		bytesSum += n
 		if bytesSum >= v.MaxPacketSize {
 			break
 		}
 
 		collection.Write(data)
+		chunker.CountCompleteDataChunks(collection.Bytes())
 	}
 
 	lex := proto.NewLexer(collection.Bytes())

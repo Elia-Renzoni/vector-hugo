@@ -19,59 +19,54 @@ type SymbolPairs struct {
 	Literals []string
 }
 
-func NewLexer() *Lexer {
-	return &Lexer{
-		inputBuffer: &bytes.Buffer{},
+func NewLexer(buf []byte) Lexer {
+	return Lexer{
+		inputBuffer: bytes.NewBuffer(buf),
 	}
-}
-
-func (l *Lexer) addNewBuffer(buf []byte) {
-	l.inputBuffer.Reset()
-	l.inputBuffer.Write(buf)
 }
 
 func (l Lexer) Scan() (SymbolPairs, error) {
 	var pairs = SymbolPairs{}
 
 	for {
-		char, err := l.inputBuffer.ReadByte()
-		if errors.Is(err, io.EOF) {
-			break
-		}
+		line, err := l.inputBuffer.ReadBytes(LF)
+		line = bytes.TrimRight(line, "\r\n")
 
-		switch char {
-		case BULKSTRING, ARRAY:
-			pairs.Tokens = append(pairs.Tokens, tokenResolver[string(char)], DIGIT)
-		case CR, LF:
-			continue
-		default:
-			var latestToken int = 0
-			if len(pairs.Tokens) > 0 {
-				latestToken = len(pairs.Tokens) - 1
-			}
+		if len(line) > 0 {
+			char := line[0]
 
-			switch latestToken {
+			switch char {
 			case BULKSTRING, ARRAY:
-				if !isDigit(char) {
-					return SymbolPairs{}, ErrLexerInvalidLiteralType
+				lit, err := scanDigit(line[1:])
+				if err != nil {
+					return SymbolPairs{}, err
 				}
 
-				pairs.Tokens = append(pairs.Tokens, DIGIT)
-				pairs.Literals = append(pairs.Literals, string(char))
-			}
+				pairs.Tokens = append(pairs.Tokens, tokenResolver[string(char)], DIGIT)
+				pairs.Literals = append(pairs.Literals, string(char), lit)
 
-			if err != nil {
-				return SymbolPairs{}, err
-			}
+			default:
+				lit, err := scanLiteral(line)
+				if err != nil {
+					return SymbolPairs{}, err
+				}
 
-			token, ok := tokenResolver[lit]
-			if !ok {
-				pairs.Tokens = append(pairs.Tokens, TEXT)
-			} else {
-				pairs.Tokens = append(pairs.Tokens, token)
-			}
+				token, ok := tokenResolver[lit]
+				if !ok {
+					pairs.Tokens = append(pairs.Tokens, TEXT)
+				} else {
+					pairs.Tokens = append(pairs.Tokens, token)
+				}
 
-			pairs.Literals = append(pairs.Literals, lit)
+				pairs.Literals = append(pairs.Literals, lit)
+			}
+		}
+
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return SymbolPairs{}, err
 		}
 	}
 
