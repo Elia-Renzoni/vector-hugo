@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/vector-hugo/internal/functions"
-	"github.com/vector-hugo/internal/memory"
 	"github.com/vector-hugo/internal/proto"
 	"github.com/vector-hugo/internal/router"
 )
@@ -85,7 +84,6 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 		}
 
 		chunker.CountCompleteDataChunks(collection.Bytes())
-		fmt.Println(collection.String())
 		if chunker.ChunksCompleted(totalLines) {
 			break
 		}
@@ -112,37 +110,42 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 	}
 
 	execFunc := functions.GetFunc(command)
-	var mem *memory.Arena
 
-	// find the database correct database for
-	// the given data structure
-	if command.CommandName != "lpushx" {
-		mem, err = v.Dbs.Route(command.Args[0], false)
-	} else {
-		mem, err = v.Dbs.Route(command.Args[0], true)
-	}
-
+	create := command.CommandName == "lpush" || command.CommandName == "rpush"
+	mem, err := v.Dbs.Route(command.Args[0], create)
 	if err != nil {
 		conn.Write([]byte("-ERR router: " + err.Error() + "\r\n"))
 		return
 	}
 
-	var n int = -1
+	if mem == nil {
+		switch command.CommandName {
+		case "lpop", "rpop":
+			conn.Write([]byte("$-1\r\n")) // nil
+		default: // llen, lpushx
+			conn.Write([]byte(":0\r\n"))
+		}
+		return
+	}
 
+	var n int
 	switch t := execFunc.(type) {
 	case functions.FlatFunc:
 		n, err = t(mem)
 	case functions.ModFunc:
-		err = t(mem, command.Args[1:])
+		n, err = t(mem, command.Args[1:])
+	default:
+		err = fmt.Errorf("unsupported function type %T", execFunc)
 	}
 
 	if err != nil {
 		conn.Write([]byte("-ERR cmd: " + err.Error() + "\r\n"))
+		return
+	}
+
+	if n == -1 {
+		conn.Write([]byte("+OK\r\n"))
 	} else {
-		if n == -1 {
-			conn.Write([]byte("+OK\r\n"))
-		} else {
-			conn.Write([]byte(":" + strconv.Itoa(n) + "\r\n"))
-		}
+		conn.Write([]byte(":" + strconv.Itoa(n) + "\r\n"))
 	}
 }

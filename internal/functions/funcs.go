@@ -2,33 +2,33 @@ package functions
 
 import "github.com/vector-hugo/internal/memory"
 
-func Lpush(bpool *memory.Arena, data []string) error {
+func Lpush(bpool *memory.Arena, data []string) (int, error) {
 	for _, d := range data {
 		record := []byte(d)
 
 		err := bpool.Malloc(record, false)
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
-	return nil
+	return len(data), nil
 }
 
-func Rpush(bpool *memory.Arena, data []string) error {
+func Rpush(bpool *memory.Arena, data []string) (int, error) {
 	for _, d := range data {
 		record := []byte(d)
 
 		err := bpool.Malloc(record, true)
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
-	return nil
+	return len(data), nil
 }
 
-func Lpushx(bpool *memory.Arena, data []string) error {
+func Lpushx(bpool *memory.Arena, data []string) (int, error) {
 	return Lpush(bpool, data)
 }
 

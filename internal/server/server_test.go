@@ -3,7 +3,6 @@ package server_test
 import (
 	"context"
 	"net"
-	"reflect"
 	"testing"
 	"time"
 
@@ -92,17 +91,21 @@ func TestServer(t *testing.T) {
 			},
 		}
 
-		var got *rdb.IntCmd
 		for _, tt := range tests {
+			var got *rdb.IntCmd
 			if tt.cmdFetch != nil {
 				got = tt.cmdFetch(context.Background(), tt.in.dbName)
 			} else if tt.cmdMod != nil {
 				got = tt.cmdMod(context.Background(), tt.in.dbName, tt.in.dbValues...)
 			}
 
-			if !reflect.DeepEqual(got, tt.expOut) {
-				t.Fatalf("expected %v but got %v", tt.expOut, got)
+			if err := got.Err(); err != nil {
+				t.Fatalf("%s: unexpected error: %v", got.Name(), err)
+			}
+			if got.Val() != tt.expOut.Val() {
+				t.Fatalf("%s: expected %d but got %d", got.Name(), tt.expOut.Val(), got.Val())
 			}
 		}
+
 	})
 }

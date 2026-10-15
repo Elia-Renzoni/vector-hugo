@@ -16,7 +16,7 @@ func TestList(t *testing.T) {
 
 		targets := []string{"abba", "bbaac"}
 
-		err = functions.Lpush(arena, targets)
+		_, err = functions.Lpush(arena, targets)
 		if err != nil {
 			t.Fail()
 		}
@@ -41,7 +41,7 @@ func TestList(t *testing.T) {
 
 		targets := []string{"ffff", "cccd"}
 
-		err = functions.Rpush(arena, targets)
+		_, err = functions.Rpush(arena, targets)
 		if err != nil {
 			t.Fail()
 		}
@@ -71,7 +71,7 @@ func TestList(t *testing.T) {
 
 		targets := []string{"1230", "sjsjl"}
 
-		err = functions.Lpush(arena, targets)
+		_, err = functions.Lpush(arena, targets)
 		if err != nil {
 			t.Fail()
 		}
@@ -94,7 +94,7 @@ func TestList(t *testing.T) {
 
 		targets := []string{"30322", "foobarmock"}
 
-		err = functions.Lpush(arena, targets)
+		_, err = functions.Lpush(arena, targets)
 		if err != nil {
 			t.Fail()
 		}
@@ -118,7 +118,7 @@ func TestList(t *testing.T) {
 
 		targets := []string{"1230", "sjsjl", "mockbarmock", "eeeee"}
 
-		err = functions.Lpush(arena, targets)
+		_, err = functions.Lpush(arena, targets)
 		if err != nil {
 			t.Fail()
 		}
