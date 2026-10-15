@@ -6,6 +6,7 @@ const (
 	ARRAY      = '*'
 	// RESP	protocol separators
 	LF = '\n'
+	CR = '\r'
 
 	SERROR = iota * 1
 	BULKSTRING_TOK
@@ -42,19 +43,19 @@ const (
 )
 
 var tokenResolver = map[string]int{
-	"LPUSH":     LPUSH,
-	"RPUSH":     RPUSH,
-	"LPUSHX":    LPUSHX,
-	"LPOP":      LPOP,
-	"RPOP":      RPOP,
-	"BLPOP":     BLPOP,
-	"LLEN":      LLEN,
-	"SADD":      SADD,
-	"SREM":      SREM,
-	"SMEMBERS":  SMEMBERS,
-	"SISMEMBER": SISMEMBER,
-	"SCARD":     SCARD,
-	"SPOP":      SPOP,
+	"lpush":     LPUSH,
+	"rpush":     RPUSH,
+	"lpushx":    LPUSHX,
+	"lpop":      LPOP,
+	"rpop":      RPOP,
+	"blpop":     BLPOP,
+	"llen":      LLEN,
+	"sadd":      SADD,
+	"srem":      SREM,
+	"smembers":  SMEMBERS,
+	"sismember": SISMEMBER,
+	"scard":     SCARD,
+	"spop":      SPOP,
 	"*":         ARRAY_TOK,
 	"$":         BULKSTRING_TOK,
 }

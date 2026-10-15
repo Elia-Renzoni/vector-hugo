@@ -3,21 +3,19 @@ package server_test
 import (
 	"context"
 	"net"
-	"reflect"
 	"testing"
 	"time"
 
+	"github.com/vector-hugo/internal/router"
 	"github.com/vector-hugo/internal/server"
 
-	rdb "github.com/redis/go-redis/v9"
+	rdb "github.com/go-redis/redis/v8"
 )
 
 func setupRedisClient() *rdb.Client {
 	return rdb.NewClient(&rdb.Options{
-		Addr:     "127.0.0.1:6379",
-		Password: "",
-		DB:       0,
-		Protocol: 2,
+		Addr: "127.0.0.1:6379",
+		DB:   0,
 	})
 }
 
@@ -27,6 +25,7 @@ func setupVectorHugoServer() server.VectorHugo {
 		ListenPort:    6379,
 		ConnsDeadline: time.Time{},
 		MaxPacketSize: 16000,
+		Dbs:           router.NewListDB(),
 	}
 }
 
@@ -39,7 +38,11 @@ func TestServer(t *testing.T) {
 	client := setupRedisClient()
 	server := setupVectorHugoServer()
 
-	go server.ListenAndServe()
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			t.Errorf("ListenAndServe: %v", err)
+		}
+	}()
 
 	time.Sleep(3 * time.Second)
 
@@ -88,17 +91,21 @@ func TestServer(t *testing.T) {
 			},
 		}
 
-		var got *rdb.IntCmd
 		for _, tt := range tests {
+			var got *rdb.IntCmd
 			if tt.cmdFetch != nil {
 				got = tt.cmdFetch(context.Background(), tt.in.dbName)
 			} else if tt.cmdMod != nil {
 				got = tt.cmdMod(context.Background(), tt.in.dbName, tt.in.dbValues...)
 			}
 
-			if !reflect.DeepEqual(got, tt.expOut) {
-				t.Fatalf("expected %v but got %v", tt.expOut, got)
+			if err := got.Err(); err != nil {
+				t.Fatalf("%s: unexpected error: %v", got.Name(), err)
+			}
+			if got.Val() != tt.expOut.Val() {
+				t.Fatalf("%s: expected %d but got %d", got.Name(), tt.expOut.Val(), got.Val())
 			}
 		}
+
 	})
 }

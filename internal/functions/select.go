@@ -6,24 +6,25 @@ import (
 )
 
 type (
-	ModFunc  func(*memory.Arena, []string) error
+	ModFunc  func(*memory.Arena, []string) (int, error)
 	FlatFunc func(*memory.Arena) (int, error)
 )
 
 func GetFunc(cmd proto.ExecutableCommand) any {
 	switch cmd.CommandName {
-	case "LPUSH":
-		return Lpush
-	case "RPUSH":
-		return Rpush
-	case "LPUSHX":
-		return Lpushx
-	case "LPOP":
+	case "lpush":
+		return ModFunc(Lpush)
+	case "rpush":
+		return ModFunc(Rpush)
+	case "lpushx":
+		return ModFunc(Lpushx)
+	case "lpop":
 		return Lpop
-	case "RPOP":
+	case "rpop":
 		return Rpop
-	case "LLEN":
-		return Llen
+	case "llen":
+		return FlatFunc(Llen)
+	default:
 	}
 
 	return nil
