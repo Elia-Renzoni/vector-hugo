@@ -128,14 +128,17 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 		return
 	}
 
-	var n int
+	var (
+		n          int
+		resultData string
+	)
 	switch t := execFunc.(type) {
 	case functions.ReadFunc:
 		n, err = t(mem)
 	case functions.WriteFunc:
 		n, err = t(mem, command.Args[1:])
 	case functions.DelFunc:
-		err = t(mem)
+		resultData, err = t(mem)
 	default:
 		err = fmt.Errorf("unsupported function type %T", execFunc)
 	}
@@ -143,6 +146,10 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 	if err != nil {
 		conn.Write([]byte("-ERR cmd: " + err.Error() + "\r\n"))
 		return
+	}
+
+	if resultData != "" {
+
 	}
 
 	if n == -1 {

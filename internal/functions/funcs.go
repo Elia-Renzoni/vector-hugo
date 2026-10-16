@@ -1,6 +1,15 @@
 package functions
 
-import "github.com/vector-hugo/internal/memory"
+import (
+	"bytes"
+	"errors"
+
+	"github.com/vector-hugo/internal/memory"
+)
+
+var (
+	ErrEmptyReturnedData = errors.New("Empty data")
+)
 
 func Lpush(bpool *memory.Arena, data []string) (int, error) {
 	for _, d := range data {
@@ -32,12 +41,31 @@ func Lpushx(bpool *memory.Arena, data []string) (int, error) {
 	return Lpush(bpool, data)
 }
 
-func Lpop(bpool *memory.Arena) error {
-	return bpool.Free(nil, false)
+func Lpop(bpool *memory.Arena) (string, error) {
+	data, err := bpool.Free(nil, false)
+	if err != nil {
+		return "", err
+	}
+
+	if len(data) == 0 {
+		return "", ErrEmptyReturnedData
+	}
+	result := bytes.NewBuffer(data)
+	return result.String(), err
 }
 
-func Rpop(bpool *memory.Arena) error {
-	return bpool.Free(nil, true)
+func Rpop(bpool *memory.Arena) (string, error) {
+	data, err := bpool.Free(nil, true)
+	if err != nil {
+		return "", err
+	}
+
+	if len(data) == 0 {
+		return "", ErrEmptyReturnedData
+	}
+
+	result := bytes.NewBuffer(data)
+	return result.String(), nil
 }
 
 func Blpop(bpool *memory.Arena) {

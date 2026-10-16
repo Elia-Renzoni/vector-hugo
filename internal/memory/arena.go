@@ -70,6 +70,13 @@ func (a *Arena) Malloc(data []byte, allocStyle bool) error {
 		return nil
 	}
 
+	if a.memoryUsed == 0 {
+		a.latestPushedEntry = memEntry{
+			header:  memSegment.header,
+			payload: bytes.Clone(data),
+		}
+	}
+
 	// alloc the new data as the first entry
 	// and shift right the oldest entries
 	copy(a.mem[len(memSegment.payload)+1:], a.mem[:a.memoryUsed])
@@ -80,7 +87,7 @@ func (a *Arena) Malloc(data []byte, allocStyle bool) error {
 	return nil
 }
 
-func (a *Arena) Free(target []byte, deletionStyle bool) error {
+func (a *Arena) Free(target []byte, deletionStyle bool) ([]byte, error) {
 	if target != nil {
 		return a.freeWithTarget(target)
 	}
@@ -89,22 +96,24 @@ func (a *Arena) Free(target []byte, deletionStyle bool) error {
 	// nedeed
 	if deletionStyle {
 		data := a.latestPushedEntry.payload
-		payloadStart := a.memoryUsed - len(data) - 1
-		clear(a.mem[payloadStart:a.memoryUsed])
-		a.memoryUsed -= payloadStart
-		return nil
+		start := a.memoryUsed - len(data) - 1
+		deletedData := bytes.Clone(a.mem[start+1 : a.memoryUsed])
+		clear(a.mem[start:a.memoryUsed])
+		a.memoryUsed = start
+		return deletedData, nil
 	}
 
 	// delete the entry in the first position available,
 	// in this case shifting left the remaining data is nedeed
 	entrySize := 1 + int(a.mem[0])
+	deletedData := bytes.Clone(a.mem[1:entrySize])
 	copy(a.mem, a.mem[entrySize:a.memoryUsed])
 	a.memoryUsed -= entrySize
-	clear(a.mem[a.memoryUsed:])
-	return nil
+	clear(a.mem[a.memoryUsed : a.memoryUsed+entrySize])
+	return deletedData, nil
 }
 
-func (a *Arena) freeWithTarget(target []byte) error {
+func (a *Arena) freeWithTarget(target []byte) ([]byte, error) {
 	scanOffset := 0
 	found := false
 	payloadStart := 0
@@ -127,7 +136,7 @@ func (a *Arena) freeWithTarget(target []byte) error {
 	}
 
 	if !found {
-		return ErrValueNotFound
+		return nil, ErrValueNotFound
 	}
 
 	// Phase 2. if founded, reshape the entries by shifting them
@@ -136,12 +145,13 @@ func (a *Arena) freeWithTarget(target []byte) error {
 	entryEnd := payloadEnd
 	entrySize := entryEnd - entryStart
 
+	deletedData := bytes.Clone(a.mem[payloadStart:payloadEnd])
 	copy(a.mem[entryStart:], a.mem[entryEnd:a.memoryUsed])
 
 	a.memoryUsed -= entrySize
 	clear(a.mem[a.memoryUsed:])
 
-	return nil
+	return deletedData, nil
 }
 
 func (a *Arena) Scan(target []byte) (bool, int, error) {

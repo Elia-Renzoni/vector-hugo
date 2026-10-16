@@ -63,7 +63,7 @@ func TestList(t *testing.T) {
 		}
 	})
 
-	t.Run("TestListLPOP", func(t *testing.T) {
+	t.Run("TestListFree", func(t *testing.T) {
 		arena, err := memory.NewArena()
 		if err != nil {
 			t.Fail()
@@ -86,7 +86,7 @@ func TestList(t *testing.T) {
 		}
 	})
 
-	t.Run("TestListRPOP", func(t *testing.T) {
+	t.Run("TestListFree2", func(t *testing.T) {
 		arena, err := memory.NewArena()
 		if err != nil {
 			t.Fail()
@@ -132,5 +132,59 @@ func TestList(t *testing.T) {
 			t.Fatalf("expected %d got %d", len(targets), n)
 		}
 
+	})
+
+	t.Run("TestListRPOP", func(t *testing.T) {
+		arena, err := memory.NewArena()
+		if err != nil {
+			t.Fail()
+		}
+
+		targets := []string{"aaa", "bbbb", "cccc", "ddd"}
+		n, err := functions.Lpush(arena, targets)
+		if err != nil {
+			t.Fail()
+		}
+
+		if n != len(targets) {
+			t.Fail()
+		}
+
+		data, err := functions.Rpop(arena)
+		if err != nil {
+			t.Fail()
+		}
+
+		t.Logf("result: %s", data)
+
+		if data != targets[0] {
+			t.Fatalf("expected %s but got %s", targets[len(targets)-1], data)
+		}
+	})
+
+	t.Run("TestListLPOP", func(t *testing.T) {
+		arena, err := memory.NewArena()
+		if err != nil {
+			t.Fail()
+		}
+		targets := []string{"aaa", "bbbb", "cccc", "ddd"}
+		n, err := functions.Lpush(arena, targets)
+		if err != nil {
+			t.Fail()
+		}
+		if n != len(targets) {
+			t.Fail()
+		}
+
+		data, err := functions.Lpop(arena)
+		if err != nil {
+			t.Fail()
+		}
+
+		t.Logf("result: %s", data)
+
+		if data != targets[len(targets)-1] {
+			t.Fatalf("expected %s but got %s", targets[0], data)
+		}
 	})
 }
