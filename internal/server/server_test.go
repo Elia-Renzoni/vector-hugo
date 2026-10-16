@@ -46,7 +46,7 @@ func TestServer(t *testing.T) {
 
 	time.Sleep(3 * time.Second)
 
-	t.Run("TestHandleConnectionWithSuccess", func(t *testing.T) {
+	t.Run("TestHandleWriteAndReadFunctions", func(t *testing.T) {
 		tests := []struct {
 			in struct {
 				dbName   string
@@ -107,5 +107,52 @@ func TestServer(t *testing.T) {
 			}
 		}
 
+	})
+
+	t.Run("TestHandleDeleteFunctions", func(t *testing.T) {
+		dataToWrite := []any{
+			"value1", "value2",
+			12, 13,
+			"value3", "value4",
+			"value5", 3,
+			"value7", "value8",
+		}
+
+		got := client.LPush(context.Background(), "testList", dataToWrite)
+		if got.Err() != nil {
+			t.Fatal(got.Err().Error())
+		}
+
+		if got.Val() != int64(len(dataToWrite)) {
+			t.Fatalf("expected %d but got %d", len(dataToWrite), got.Val())
+		}
+
+		gotBulkString := client.LPop(context.Background(), "testList")
+		if gotBulkString.Err() != nil {
+			t.Fatal(gotBulkString.Err().Error())
+		}
+
+		s, err := gotBulkString.Result()
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+
+		if s != dataToWrite[len(dataToWrite)-1] {
+			t.Fatalf("expected %s but got %s", dataToWrite[len(dataToWrite)-1], s)
+		}
+
+		gotBulkString = client.RPop(context.Background(), "testList")
+		if gotBulkString.Err() != nil {
+			t.Fatal(gotBulkString.Err().Error())
+		}
+
+		s, err = gotBulkString.Result()
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+
+		if s != dataToWrite[0] {
+			t.Fatalf("expected %s but got %s", dataToWrite[0], s)
+		}
 	})
 }
