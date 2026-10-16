@@ -157,7 +157,7 @@ func TestList(t *testing.T) {
 
 		t.Logf("result: %s", data)
 
-		if data != targets[len(targets)-1] {
+		if data != targets[0] {
 			t.Fatalf("expected %s but got %s", targets[len(targets)-1], data)
 		}
 	})
@@ -183,7 +183,7 @@ func TestList(t *testing.T) {
 
 		t.Logf("result: %s", data)
 
-		if data != targets[0] {
+		if data != targets[len(targets)-1] {
 			t.Fatalf("expected %s but got %s", targets[0], data)
 		}
 	})
