@@ -8,7 +8,7 @@ import (
 type (
 	WriteFunc func(*memory.Arena, []string) (int, error)
 	ReadFunc  func(*memory.Arena) (int, error)
-	DelFunc   func(*memory.Arena) error
+	DelFunc   func(*memory.Arena) (string, error)
 )
 
 func GetFunc(cmd proto.ExecutableCommand) any {

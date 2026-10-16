@@ -80,7 +80,7 @@ func (a *Arena) Malloc(data []byte, allocStyle bool) error {
 	return nil
 }
 
-func (a *Arena) Free(target []byte, deletionStyle bool) error {
+func (a *Arena) Free(target []byte, deletionStyle bool) ([]byte, error) {
 	if target != nil {
 		return a.freeWithTarget(target)
 	}
@@ -90,9 +90,10 @@ func (a *Arena) Free(target []byte, deletionStyle bool) error {
 	if deletionStyle {
 		data := a.latestPushedEntry.payload
 		payloadStart := a.memoryUsed - len(data) - 1
+		deletedData := bytes.Clone(a.mem[payloadStart:a.memoryUsed])
 		clear(a.mem[payloadStart:a.memoryUsed])
 		a.memoryUsed -= payloadStart
-		return nil
+		return deletedData, nil
 	}
 
 	// delete the entry in the first position available,
@@ -100,11 +101,12 @@ func (a *Arena) Free(target []byte, deletionStyle bool) error {
 	entrySize := 1 + int(a.mem[0])
 	copy(a.mem, a.mem[entrySize:a.memoryUsed])
 	a.memoryUsed -= entrySize
+	deletedData := bytes.Clone(a.mem[1:entrySize])
 	clear(a.mem[a.memoryUsed:])
-	return nil
+	return deletedData, nil
 }
 
-func (a *Arena) freeWithTarget(target []byte) error {
+func (a *Arena) freeWithTarget(target []byte) ([]byte, error) {
 	scanOffset := 0
 	found := false
 	payloadStart := 0
@@ -127,7 +129,7 @@ func (a *Arena) freeWithTarget(target []byte) error {
 	}
 
 	if !found {
-		return ErrValueNotFound
+		return nil, ErrValueNotFound
 	}
 
 	// Phase 2. if founded, reshape the entries by shifting them
@@ -139,9 +141,10 @@ func (a *Arena) freeWithTarget(target []byte) error {
 	copy(a.mem[entryStart:], a.mem[entryEnd:a.memoryUsed])
 
 	a.memoryUsed -= entrySize
+	deletedData := a.mem[a.memoryUsed:]
 	clear(a.mem[a.memoryUsed:])
 
-	return nil
+	return deletedData, nil
 }
 
 func (a *Arena) Scan(target []byte) (bool, int, error) {

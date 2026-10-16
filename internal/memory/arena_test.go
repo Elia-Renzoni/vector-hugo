@@ -244,7 +244,7 @@ func TestFreeLastEntry(t *testing.T) {
 	// [5][hello][5][world]
 	//
 	// POP "world"
-	if err := a.Free(nil, true); err != nil {
+	if _, err := a.Free(nil, true); err != nil {
 		t.Fatalf("Free() error = %v", err)
 	}
 
@@ -284,7 +284,7 @@ func TestFreeFirstEntry(t *testing.T) {
 	// elimina il primo:
 	//
 	// [5][world]
-	if err := a.Free(nil, false); err != nil {
+	if _, err := a.Free(nil, false); err != nil {
 		t.Fatalf("Free() error = %v", err)
 	}
 
@@ -325,7 +325,7 @@ func TestFreeTarget(t *testing.T) {
 	// elimina "two":
 	//
 	// [3][one][5][three]
-	err := a.Free([]byte("two"), false)
+	_, err := a.Free([]byte("two"), false)
 	if err != nil {
 		t.Fatalf("Free(target) error = %v", err)
 	}
@@ -365,7 +365,7 @@ func TestFreeTargetFirstEntry(t *testing.T) {
 		}
 	}
 
-	err := a.Free([]byte("one"), false)
+	_, err := a.Free([]byte("one"), false)
 	if err != nil {
 		t.Fatalf("Free(target) error = %v", err)
 	}
@@ -397,7 +397,7 @@ func TestFreeTargetLastEntry(t *testing.T) {
 		}
 	}
 
-	err := a.Free([]byte("three"), false)
+	_, err := a.Free([]byte("three"), false)
 	if err != nil {
 		t.Fatalf("Free(target) error = %v", err)
 	}
@@ -423,7 +423,7 @@ func TestFreeTargetNotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err := a.Free([]byte("missing"), false)
+	_, err := a.Free([]byte("missing"), false)
 
 	if err != ErrValueNotFound {
 		t.Fatalf(
@@ -564,7 +564,7 @@ func TestScanAfterFree(t *testing.T) {
 		}
 	}
 
-	if err := a.Free([]byte("two"), false); err != nil {
+	if _, err := a.Free([]byte("two"), false); err != nil {
 		t.Fatal(err)
 	}
 
@@ -605,12 +605,10 @@ func TestMallocAfterFree(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Rimuove "world".
-	if err := a.Free(nil, true); err != nil {
+	if _, err := a.Free(nil, true); err != nil {
 		t.Fatal(err)
 	}
 
-	// Lo spazio deve essere riutilizzabile.
 	if err := a.Malloc([]byte("again"), true); err != nil {
 		t.Fatalf("Malloc() after Free() error = %v", err)
 	}
@@ -642,7 +640,7 @@ func TestFreeFirstThenMalloc(t *testing.T) {
 		}
 	}
 
-	if err := a.Free(nil, false); err != nil {
+	if _, err := a.Free(nil, false); err != nil {
 		t.Fatal(err)
 	}
 
