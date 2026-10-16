@@ -15,7 +15,7 @@ func TestParser(t *testing.T) {
 	}{
 		{
 			// RPUSH myList 10 20
-			in: "*4\r\n$5\r\nRPUSH\r\n$6\r\nmyList\r\n$2\r\n10\r\n$2\r\n20\r\n",
+			in: "*4\r\n$5\r\nrpush\r\n$6\r\nmyList\r\n$2\r\n10\r\n$2\r\n20\r\n",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -40,7 +40,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.RPUSH,
-								Literal: "RPUSH",
+								Literal: "rpush",
 							},
 						},
 					},
@@ -98,7 +98,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			// LPUSHX myList 5
-			in: "*3\r\n$6\r\nLPUSHX\r\n$6\r\nmyList\r\n$1\r\n5\r\n",
+			in: "*3\r\n$6\r\nlpushx\r\n$6\r\nmyList\r\n$1\r\n5\r\n",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -123,7 +123,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.LPUSHX,
-								Literal: "LPUSHX",
+								Literal: "lpushx",
 							},
 						},
 					},
@@ -165,7 +165,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			// LPOP myList
-			in: "*2\r\n$4\r\nLPOP\r\n$6\r\nmyList\r\n",
+			in: "*2\r\n$4\r\nlpop\r\n$6\r\nmyList\r\n",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -190,7 +190,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.LPOP,
-								Literal: "LPOP",
+								Literal: "lpop",
 							},
 						},
 					},
@@ -216,7 +216,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			// RPOP myList
-			in: "*2\r\n$4\r\nRPOP\r\n$6\r\nmyList\r\n",
+			in: "*2\r\n$4\r\nrpop\r\n$6\r\nmyList\r\n",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -241,7 +241,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.RPOP,
-								Literal: "RPOP",
+								Literal: "rpop",
 							},
 						},
 					},
@@ -267,7 +267,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			// BLPOP myList 5
-			in: "*3\r\n$5\r\nBLPOP\r\n$6\r\nmyList\r\n$1\r\n5\r\n",
+			in: "*3\r\n$5\r\nblpop\r\n$6\r\nmyList\r\n$1\r\n5\r\n",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -292,7 +292,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.BLPOP,
-								Literal: "BLPOP",
+								Literal: "blpop",
 							},
 						},
 					},
@@ -334,7 +334,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			// LLEN myList
-			in: "*2\r\n$4\r\nLLEN\r\n$6\r\nmyList\r\n",
+			in: "*2\r\n$4\r\nllen\r\n$6\r\nmyList\r\n",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -359,7 +359,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.LLEN,
-								Literal: "LLEN",
+								Literal: "llen",
 							},
 						},
 					},
@@ -385,7 +385,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			// SADD mySet a b
-			in: "*4\r\n$4\r\nSADD\r\n$5\r\nmySet\r\n$1\r\na\r\n$1\r\nb\r\n",
+			in: "*4\r\n$4\r\nsadd\r\n$5\r\nmySet\r\n$1\r\na\r\n$1\r\nb\r\n",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -410,7 +410,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.SADD,
-								Literal: "SADD",
+								Literal: "sadd",
 							},
 						},
 					},
@@ -468,7 +468,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			// SREM mySet a
-			in: "*3\r\n$4\r\nSREM\r\n$5\r\nmySet\r\n$1\r\na\r\n",
+			in: "*3\r\n$4\r\nsrem\r\n$5\r\nmySet\r\n$1\r\na\r\n",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -493,7 +493,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.SREM,
-								Literal: "SREM",
+								Literal: "srem",
 							},
 						},
 					},
@@ -535,7 +535,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			// SMEMBERS mySet
-			in: "*2\r\n$8\r\nSMEMBERS\r\n$5\r\nmySet\r\n",
+			in: "*2\r\n$8\r\nsmembers\r\n$5\r\nmySet\r\n",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -560,7 +560,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.SMEMBERS,
-								Literal: "SMEMBERS",
+								Literal: "smembers",
 							},
 						},
 					},
@@ -586,7 +586,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			// SISMEMBER mySet a
-			in: "*3\r\n$9\r\nSISMEMBER\r\n$5\r\nmySet\r\n$1\r\na\r\n",
+			in: "*3\r\n$9\r\nsismember\r\n$5\r\nmySet\r\n$1\r\na\r\n",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -611,7 +611,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.SISMEMBER,
-								Literal: "SISMEMBER",
+								Literal: "sismember",
 							},
 						},
 					},
@@ -653,7 +653,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			// SCARD mySet
-			in: "*2\r\n$5\r\nSCARD\r\n$5\r\nmySet\r\n",
+			in: "*2\r\n$5\r\nscard\r\n$5\r\nmySet\r\n",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -678,7 +678,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.SCARD,
-								Literal: "SCARD",
+								Literal: "scard",
 							},
 						},
 					},
@@ -704,7 +704,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			// SPOP mySet
-			in: "*2\r\n$4\r\nSPOP\r\n$5\r\nmySet\r\n",
+			in: "*2\r\n$4\r\nspop\r\n$5\r\nmySet\r\n",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -729,7 +729,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.SPOP,
-								Literal: "SPOP",
+								Literal: "spop",
 							},
 						},
 					},
@@ -754,7 +754,7 @@ func TestParser(t *testing.T) {
 			err: nil,
 		},
 		{
-			in: "*3\r\n$5\r\nLPUSH\r\n$6\r\nmyList\r\n$2\r\n30",
+			in: "*3\r\n$5\r\nlpush\r\n$6\r\nmyList\r\n$2\r\n30",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{
 					Prefix: proto.PrefixSymbolAST{
@@ -779,7 +779,7 @@ func TestParser(t *testing.T) {
 							},
 							Text: proto.StringAST{
 								Token:   proto.LPUSH,
-								Literal: "LPUSH",
+								Literal: "lpush",
 							},
 						},
 					},
