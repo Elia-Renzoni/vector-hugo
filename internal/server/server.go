@@ -130,10 +130,12 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 
 	var n int
 	switch t := execFunc.(type) {
-	case functions.FlatFunc:
+	case functions.ReadFunc:
 		n, err = t(mem)
-	case functions.ModFunc:
+	case functions.WriteFunc:
 		n, err = t(mem, command.Args[1:])
+	case functions.DelFunc:
+		err = t(mem)
 	default:
 		err = fmt.Errorf("unsupported function type %T", execFunc)
 	}
