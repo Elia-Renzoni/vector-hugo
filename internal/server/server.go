@@ -92,20 +92,20 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 	lex := proto.NewLexer(collection.Bytes())
 	tokens, err := lex.Scan()
 	if err != nil {
-		conn.Write([]byte("-ERR lexer: " + err.Error() + "\r\n"))
+		conn.Write([]byte(proto.BuildSimpleError("lexer", err.Error())))
 		return
 	}
 
 	parser := proto.NewParser(tokens)
 	ast, err := parser.Parse()
 	if err != nil {
-		conn.Write([]byte("-ERR parser: " + err.Error() + "\r\n"))
+		conn.Write([]byte(proto.BuildSimpleError("parser", err.Error())))
 		return
 	}
 
 	command, err := proto.BindAST(ast)
 	if err != nil {
-		conn.Write([]byte("-ERR binder: " + err.Error() + "\r\n"))
+		conn.Write([]byte(proto.BuildSimpleError("binder", err.Error())))
 		return
 	}
 
@@ -114,16 +114,16 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 	create := command.CommandName == "lpush" || command.CommandName == "rpush"
 	mem, err := v.Dbs.Route(command.Args[0], create)
 	if err != nil {
-		conn.Write([]byte("-ERR router: " + err.Error() + "\r\n"))
+		conn.Write([]byte(proto.BuildSimpleError("router", err.Error())))
 		return
 	}
 
 	if mem == nil {
 		switch command.CommandName {
 		case "lpop", "rpop":
-			conn.Write([]byte("$-1\r\n")) // nil
+			conn.Write([]byte(proto.BuildNULLValue())) // nil
 		default: // llen, lpushx
-			conn.Write([]byte(":0\r\n"))
+			conn.Write([]byte(proto.BuildInteger(0)))
 		}
 		return
 	}
@@ -144,17 +144,18 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 	}
 
 	if err != nil {
-		conn.Write([]byte("-ERR cmd: " + err.Error() + "\r\n"))
+		conn.Write([]byte(proto.BuildSimpleError("cmd", err.Error())))
 		return
 	}
 
 	if resultData != "" {
-
+		conn.Write([]byte(proto.BuildBulkString(resultData)))
+		return
 	}
 
 	if n == -1 {
-		conn.Write([]byte("+OK\r\n"))
+		conn.Write([]byte(proto.BuildSimpleString("OK")))
 	} else {
-		conn.Write([]byte(":" + strconv.Itoa(n) + "\r\n"))
+		conn.Write([]byte(proto.BuildInteger(n)))
 	}
 }
