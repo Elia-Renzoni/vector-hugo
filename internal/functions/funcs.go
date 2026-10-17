@@ -68,28 +68,7 @@ func Rpop(bpool *memory.Arena) (string, error) {
 	return result.String(), nil
 }
 
-func Blpop(bpool *memory.Arena) {
-}
-
 func Llen(bpool *memory.Arena) (int, error) {
 	_, size, err := bpool.Scan(nil)
 	return size, err
-}
-
-func Sadd(bpool *memory.Arena) {
-}
-
-func Srem(bpool *memory.Arena) {
-}
-
-func Smembers(bpool *memory.Arena) {
-}
-
-func Sismember(bpool *memory.Arena) {
-}
-
-func Scard(bpool *memory.Arena) {
-}
-
-func Spop(bpool *memory.Arena) {
 }
