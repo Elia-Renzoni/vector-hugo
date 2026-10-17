@@ -13,10 +13,10 @@ func TestScan(t *testing.T) {
 		out proto.SymbolPairs
 	}{
 		{
-			in: "*3\r\n$5\r\nlpush\r\n$6\r\nmyList\r\n$2\r\n30",
+			in: "*3\r\n$5\r\nlpush\r\n$6\r\nmyList\r\n$2\r\n30\r\n$4\r\n3.14\r\n",
 			out: proto.SymbolPairs{
-				Tokens:   []int{proto.ARRAY_TOK, proto.DIGIT, proto.BULKSTRING_TOK, proto.DIGIT, proto.LPUSH, proto.BULKSTRING_TOK, proto.DIGIT, proto.TEXT, proto.BULKSTRING_TOK, proto.DIGIT, proto.TEXT},
-				Literals: []string{"*", "3", "$", "5", "lpush", "$", "6", "myList", "$", "2", "30"},
+				Tokens:   []int{proto.ARRAY_TOK, proto.DIGIT, proto.BULKSTRING_TOK, proto.DIGIT, proto.LPUSH, proto.BULKSTRING_TOK, proto.DIGIT, proto.TEXT, proto.BULKSTRING_TOK, proto.DIGIT, proto.TEXT, proto.BULKSTRING_TOK, proto.DIGIT, proto.TEXT},
+				Literals: []string{"*", "3", "$", "5", "lpush", "$", "6", "myList", "$", "2", "30", "$", "4", "3.14"},
 			},
 		},
 	}

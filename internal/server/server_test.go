@@ -114,7 +114,7 @@ func TestServer(t *testing.T) {
 			"value1", "value2",
 			12, 13,
 			"value3", "value4",
-			"value5", 3,
+			"value5", 3.5,
 			"value7", "value8",
 		}
 

@@ -81,6 +81,10 @@ func isText(ch byte) bool {
 	return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')
 }
 
+func isFloat(ch byte) bool {
+	return ch == '.'
+}
+
 func scanDigit(buf []byte) (string, error) {
 	for _, char := range buf {
 		if !isDigit(char) {
@@ -92,7 +96,7 @@ func scanDigit(buf []byte) (string, error) {
 
 func scanLiteral(buf []byte) (string, error) {
 	for _, char := range buf {
-		if !isDigit(char) && !isText(char) {
+		if !isDigit(char) && !isText(char) && !isFloat(char) {
 			return "", ErrLexerInvalidLiteralType
 		}
 	}
