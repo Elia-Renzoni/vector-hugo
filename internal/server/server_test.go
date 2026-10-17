@@ -112,7 +112,7 @@ func TestServer(t *testing.T) {
 	t.Run("TestHandleDeleteFunctions", func(t *testing.T) {
 		dataToWrite := []any{
 			"value1", "value2",
-			12, 13,
+			12, true,
 			"value3", "value4",
 			"value5", 3.5,
 			"value7", "value8",
