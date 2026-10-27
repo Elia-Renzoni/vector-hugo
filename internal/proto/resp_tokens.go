@@ -26,6 +26,7 @@ const (
 	RPOP
 	BLPOP
 	LLEN
+	LINDEX
 
 	// commands for manager Sets
 	SADD
@@ -56,6 +57,7 @@ var tokenResolver = map[string]int{
 	"sismember": SISMEMBER,
 	"scard":     SCARD,
 	"spop":      SPOP,
+	"lindex":    LINDEX,
 	"*":         ARRAY_TOK,
 	"$":         BULKSTRING_TOK,
 }
