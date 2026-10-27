@@ -178,7 +178,26 @@ func (a *Arena) Scan(target []byte) (bool, int, error) {
 func (a *Arena) Seek(positions ...int) ([]string, error) {
 	expectedRange := positions[0] - positions[len(positions)-1]
 	results := make([]string, expectedRange)
-	return nil, nil
+
+	for _, pos := range positions {
+		dataIndex := 0
+		scanOffset := 0
+		for scanOffset < a.memoryUsed {
+			payloadSize := int(a.mem[scanOffset])
+			payloadStart := scanOffset + 1
+			payloadEnd := payloadStart + payloadSize
+
+			data := a.mem[payloadStart:payloadEnd]
+			dataIndex += 1
+			if dataIndex == pos {
+				results = append(results, string(data))
+			}
+
+			scanOffset = payloadEnd
+		}
+	}
+
+	return results, nil
 }
 
 func (a *Arena) DestroyArena() {
