@@ -26,6 +26,13 @@ func TestScan(t *testing.T) {
 				Literals: []string{"*", "3", "$", "6", "lindex", "$", "6", "myList", "$", "2", "10"},
 			},
 		},
+		{
+			in: "*4\r\n$6\r\nlrange\r\n$6\r\nmyList\r\n$1\r\n3\r\n$2\r\n10",
+			out: proto.SymbolPairs{
+				Tokens:   []int{proto.ARRAY_TOK, proto.DIGIT, proto.BULKSTRING_TOK, proto.DIGIT, proto.LRANGE, proto.BULKSTRING_TOK, proto.DIGIT, proto.TEXT, proto.BULKSTRING_TOK, proto.DIGIT, proto.TEXT, proto.BULKSTRING_TOK, proto.DIGIT, proto.TEXT},
+				Literals: []string{"*", "4", "$", "6", "lrange", "$", "6", "myList", "$", "1", "3", "$", "2", "10"},
+			},
+		},
 	}
 
 	for _, tt := range tests {

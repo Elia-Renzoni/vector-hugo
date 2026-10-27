@@ -754,6 +754,88 @@ func TestParser(t *testing.T) {
 			err: nil,
 		},
 		{
+			in: "*4\r\n$6\r\nlrange\r\n$6\r\nmyList\r\n$1\r\n3\r\n$2\r\n90",
+			out: proto.ArrayAST{
+				ArrLength: proto.ArrayLengthAST{
+					Prefix: proto.PrefixSymbolAST{
+						Token:   proto.ARRAY_TOK,
+						Literal: "*",
+					},
+					Length: proto.Digit64Bit{
+						Token:   proto.DIGIT,
+						Literal: 4,
+					},
+				},
+				Values: []proto.Literal{
+					proto.Literal{
+						Bstring: &proto.BulkStringAST{
+							Prefix: proto.PrefixSymbolAST{
+								Token:   proto.BULKSTRING_TOK,
+								Literal: "$",
+							},
+							Length: proto.Digit64Bit{
+								Token:   proto.DIGIT,
+								Literal: 6,
+							},
+							Text: proto.StringAST{
+								Token:   proto.LRANGE,
+								Literal: "lrange",
+							},
+						},
+					},
+					proto.Literal{
+						Bstring: &proto.BulkStringAST{
+							Prefix: proto.PrefixSymbolAST{
+								Token:   proto.BULKSTRING_TOK,
+								Literal: "$",
+							},
+							Length: proto.Digit64Bit{
+								Token:   proto.DIGIT,
+								Literal: 6,
+							},
+							Text: proto.StringAST{
+								Token:   proto.TEXT,
+								Literal: "myList",
+							},
+						},
+					},
+					proto.Literal{
+						Bstring: &proto.BulkStringAST{
+							Prefix: proto.PrefixSymbolAST{
+								Token:   proto.BULKSTRING_TOK,
+								Literal: "$",
+							},
+							Length: proto.Digit64Bit{
+								Token:   proto.DIGIT,
+								Literal: 1,
+							},
+							Text: proto.StringAST{
+								Token:   proto.TEXT,
+								Literal: "3",
+							},
+						},
+					},
+					proto.Literal{
+						Bstring: &proto.BulkStringAST{
+							Prefix: proto.PrefixSymbolAST{
+								Token:   proto.BULKSTRING_TOK,
+								Literal: "$",
+							},
+							Length: proto.Digit64Bit{
+								Token:   proto.DIGIT,
+								Literal: 2,
+							},
+							Text: proto.StringAST{
+								Token:   proto.TEXT,
+								Literal: "90",
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
 			in: "*3\r\n$6\r\nlindex\r\n$6\r\nmyList\r\n$2\r\n11",
 			out: proto.ArrayAST{
 				ArrLength: proto.ArrayLengthAST{

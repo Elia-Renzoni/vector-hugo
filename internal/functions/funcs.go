@@ -86,3 +86,11 @@ func Lindex(bpool *memory.Arena, position int) (string, error) {
 
 	return result[0], nil
 }
+
+func Lrange(bpool *memory.Arena, positions ...int) ([]string, error) {
+	results, err := bpool.Seek(positions...)
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
