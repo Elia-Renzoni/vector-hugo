@@ -29,6 +29,7 @@ var cmdArity = map[int]int{
 	SCARD:     1,
 	SPOP:      1,
 	LINDEX:    2,
+	LRANGE:    3,
 }
 
 func BindAST(ast ArrayAST) (ExecutableCommand, error) {
