@@ -175,7 +175,7 @@ func (a *Arena) Scan(target []byte) (bool, int, error) {
 	return false, dataReaded, nil
 }
 
-func (a *Arena) Seek(positions ...int) ([]string, error) {
+func (a *Arena) Seek(start, end int) ([]string, error) {
 	expectedRange := positions[0] - positions[len(positions)-1]
 	results := make([]string, expectedRange)
 

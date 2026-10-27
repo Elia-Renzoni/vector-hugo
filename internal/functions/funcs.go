@@ -74,12 +74,12 @@ func Llen(bpool *memory.Arena) (int, error) {
 	return size, err
 }
 
-func Lindex(bpool *memory.Arena, position int) (string, error) {
-	if position < 0 {
+func Lindex(bpool *memory.Arena, index int) (string, error) {
+	if index < 0 {
 		return "", ErrListOutOfRange
 	}
 
-	result, err := bpool.Seek(position)
+	result, err := bpool.Seek(index, 0)
 	if err != nil {
 		return "", err
 	}
@@ -87,8 +87,8 @@ func Lindex(bpool *memory.Arena, position int) (string, error) {
 	return result[0], nil
 }
 
-func Lrange(bpool *memory.Arena, positions ...int) ([]string, error) {
-	results, err := bpool.Seek(positions...)
+func Lrange(bpool *memory.Arena, start, end int) ([]string, error) {
+	results, err := bpool.Seek(start, end)
 	if err != nil {
 		return nil, err
 	}

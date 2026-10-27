@@ -10,7 +10,7 @@ type (
 	ReadFunc      func(*memory.Arena) (int, error)
 	DelFunc       func(*memory.Arena) (string, error)
 	SeekFunc      func(*memory.Arena, int) (string, error)
-	MultiSeekFunc func(*memory.Arena, ...int) ([]string, error)
+	MultiSeekFunc func(*memory.Arena, int, int) ([]string, error)
 )
 
 func GetFunc(cmd proto.ExecutableCommand) any {
