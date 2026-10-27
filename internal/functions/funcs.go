@@ -88,6 +88,10 @@ func Lindex(bpool *memory.Arena, index int) (string, error) {
 }
 
 func Lrange(bpool *memory.Arena, start, end int) ([]string, error) {
+	if start < 0 || end < start || end < 0 {
+		return nil, ErrListOutOfRange
+	}
+
 	results, err := bpool.Seek(start, end)
 	if err != nil {
 		return nil, err
