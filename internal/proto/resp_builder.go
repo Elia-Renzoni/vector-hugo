@@ -26,40 +26,50 @@ func BuildArray(content []string) string {
 }
 
 func BuildBulkString(content string) string {
+	var sb strings.Builder
+
 	length := strconv.Itoa(len(content))
-	bs := "$"
-	bs += length
-	bs += SEPARATOR
-	bs += content
-	bs += SEPARATOR
-	return bs
+	sb.WriteString("$")
+	sb.WriteString(length)
+	sb.WriteString(SEPARATOR)
+	sb.WriteString(content)
+	sb.WriteString(SEPARATOR)
+	return sb.String()
 }
 
 func BuildSimpleString(content string) string {
-	ss := "+"
-	ss += content
-	ss += SEPARATOR
-	return ss
+	var sb strings.Builder
+
+	sb.WriteString("+")
+	sb.WriteString(content)
+	sb.WriteString(SEPARATOR)
+	return sb.String()
 }
 
 func BuildSimpleError(prefix, body string) string {
-	se := "-ERR"
-	se += " " + prefix
-	se += " " + body
-	se += SEPARATOR
-	return se
+	var sb strings.Builder
+
+	sb.WriteString("-ERR")
+	sb.WriteString(" " + prefix)
+	sb.WriteString(" " + body)
+	sb.WriteString(SEPARATOR)
+	return sb.String()
 }
 
 func BuildNULLValue() string {
-	null := "$"
-	null += "-1"
-	null += SEPARATOR
-	return null
+	var sb strings.Builder
+
+	sb.WriteString("$")
+	sb.WriteString("-1")
+	sb.WriteString(SEPARATOR)
+	return sb.String()
 }
 
 func BuildInteger(val int) string {
-	integer := ":"
-	integer += strconv.Itoa(val)
-	integer += SEPARATOR
-	return integer
+	var sb strings.Builder
+
+	sb.WriteString(":")
+	sb.WriteString(strconv.Itoa(val))
+	sb.WriteString(SEPARATOR)
+	return sb.String()
 }
