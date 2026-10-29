@@ -44,11 +44,11 @@ func (v VectorHugo) ListenAndServe() error {
 			return err
 		}
 
-		go v.handleConn(conn)
+		go v.serve(conn)
 	}
 }
 
-func (v VectorHugo) handleConn(conn net.Conn) {
+func (v VectorHugo) serve(conn net.Conn) {
 	var (
 		data       = make([]byte, 1024)
 		bytesSum   = 0
@@ -89,26 +89,39 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 		}
 	}
 
-	lex := proto.NewLexer(collection.Bytes())
+	cmd, err := v.parseAndBindRequest(conn, collection)
+	if err != nil {
+		return
+	}
+
+	v.execRequest(conn, cmd)
+}
+
+func (v *VectorHugo) parseAndBindRequest(conn net.Conn, request *bytes.Buffer) (proto.ExecutableCommand, error) {
+	lex := proto.NewLexer(request.Bytes())
 	tokens, err := lex.Scan()
 	if err != nil {
 		conn.Write([]byte(proto.BuildSimpleError("lexer", err.Error())))
-		return
+		return proto.ExecutableCommand{}, err
 	}
 
 	parser := proto.NewParser(tokens)
 	ast, err := parser.Parse()
 	if err != nil {
 		conn.Write([]byte(proto.BuildSimpleError("parser", err.Error())))
-		return
+		return proto.ExecutableCommand{}, err
 	}
 
 	command, err := proto.BindAST(ast)
 	if err != nil {
 		conn.Write([]byte(proto.BuildSimpleError("binder", err.Error())))
-		return
+		return proto.ExecutableCommand{}, err
 	}
 
+	return command, nil
+}
+
+func (v *VectorHugo) execRequest(conn net.Conn, command proto.ExecutableCommand) {
 	execFunc := functions.GetFunc(command)
 
 	create := command.CommandName == "lpush" || command.CommandName == "rpush"
