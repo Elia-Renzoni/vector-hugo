@@ -1,8 +1,29 @@
 package proto
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 const SEPARATOR string = "\r\n"
+
+func BuildArray(content []string) string {
+	var arrayBuilder strings.Builder
+
+	arrayBuilder.WriteString("*")
+	arrayBuilder.WriteString(strconv.Itoa(len(content)))
+	arrayBuilder.WriteString(SEPARATOR)
+	for _, str := range content {
+		arrayBuilder.WriteString("$")
+		length := strconv.Itoa(len(str))
+		arrayBuilder.WriteString(length)
+		arrayBuilder.WriteString(SEPARATOR)
+		arrayBuilder.WriteString(str)
+		arrayBuilder.WriteString(SEPARATOR)
+	}
+
+	return arrayBuilder.String()
+}
 
 func BuildBulkString(content string) string {
 	length := strconv.Itoa(len(content))

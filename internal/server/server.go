@@ -131,6 +131,7 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 	var (
 		n          int
 		resultData string
+		resultList []string
 	)
 	switch t := execFunc.(type) {
 	case functions.ReadFunc:
@@ -139,6 +140,26 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 		n, err = t(mem, command.Args[1:])
 	case functions.DelFunc:
 		resultData, err = t(mem)
+	case functions.MultiSeekFunc:
+		var (
+			start, end int
+		)
+		start, err = strconv.Atoi(command.Args[1:][0])
+		end, err = strconv.Atoi(command.Args[1:][1])
+		if err != nil {
+			conn.Write([]byte(proto.BuildSimpleError("cmd", err.Error())))
+			return
+		}
+
+		resultList, err = functions.Lrange(mem, start, end)
+	case functions.SeekFunc:
+		index, err := strconv.Atoi(command.Args[1:][0])
+		if err != nil {
+			conn.Write([]byte(proto.BuildSimpleError("cmd", err.Error())))
+			return
+
+		}
+		resultData, err = t(mem, index)
 	default:
 		err = fmt.Errorf("unsupported function type %T", execFunc)
 	}
@@ -150,6 +171,11 @@ func (v VectorHugo) handleConn(conn net.Conn) {
 
 	if resultData != "" {
 		conn.Write([]byte(proto.BuildBulkString(resultData)))
+		return
+	}
+
+	if len(resultList) > 0 {
+		conn.Write([]byte(proto.BuildArray(resultList)))
 		return
 	}
 

@@ -3,6 +3,7 @@ package server_test
 import (
 	"context"
 	"net"
+	"reflect"
 	"testing"
 	"time"
 
@@ -107,6 +108,42 @@ func TestServer(t *testing.T) {
 			}
 		}
 
+	})
+
+	t.Run("TestHandleIndexAndRangeFunctions", func(t *testing.T) {
+		dataToWrite := []any{
+			"value1", "value2",
+			"value3", "value4",
+			12, 44.56, true,
+		}
+
+		got := client.LPush(context.Background(), "testList", dataToWrite)
+		if got.Err() != nil {
+			t.Fatal(got.Err().Error())
+		}
+
+		if got.Val() != int64(len(dataToWrite)) {
+			t.Fatalf("expected %d but got %d", len(dataToWrite), got.Val())
+		}
+
+		result := client.LIndex(context.Background(), "testList", 3)
+		if result.Err() != nil {
+			t.Fatal(result.Err().Error())
+		}
+
+		if result.Val() != "value4" {
+			t.Fatalf("expected %s but got %s", "value4", result.Val())
+		}
+
+		slice := client.LRange(context.Background(), "testList", 3, 6)
+		if slice.Err() != nil {
+			t.Fatal(slice.Err().Error())
+		}
+
+		expectedVals := []string{"value4", "value3", "value2", "value1"}
+		if !reflect.DeepEqual(expectedVals, slice.Val()) {
+			t.Fatalf("expected %v but got %v", expectedVals, slice.Val())
+		}
 	})
 
 	t.Run("TestHandleDeleteFunctions", func(t *testing.T) {
