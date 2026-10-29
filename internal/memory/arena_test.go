@@ -627,6 +627,71 @@ func TestMallocAfterFree(t *testing.T) {
 	}
 }
 
+func TestSeekWithMultiIndexes(t *testing.T) {
+	a := newTestArena(t)
+
+	for _, value := range [][]byte{
+		[]byte("one"),
+		[]byte("two"),
+		[]byte("three"),
+		[]byte("foo"),
+		[]byte("bar"),
+		[]byte("john"),
+		[]byte("doe"),
+	} {
+		if err := a.Malloc(value, true); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	results, err := a.Seek(0, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := []string{"one", "two", "three", "foo"}
+	for i, got := range results {
+		if expected[i] != got {
+			t.Fatalf("expected %s but got %s", expected[i], got)
+		}
+	}
+}
+
+func TestSeekWithSingleIndex(t *testing.T) {
+	a := newTestArena(t)
+
+	for _, value := range [][]byte{
+		[]byte("one"),
+		[]byte("two"),
+		[]byte("three"),
+		[]byte("foo"),
+		[]byte("bar"),
+		[]byte("john"),
+		[]byte("doe"),
+	} {
+		if err := a.Malloc(value, true); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	seekStartPositions := []int{3, 0, 6, 5, 1}
+	expectedResults := []string{"foo", "one", "doe", "john", "two"}
+	for i, startIndex := range seekStartPositions {
+		got, err := a.Seek(startIndex, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		exp := expectedResults[i]
+		if len(got) == 0 {
+			t.Fatal("expected one element, but got 0")
+		}
+		if got[0] != exp {
+			t.Fatalf("expected %s but got %s", exp, got[0])
+		}
+	}
+}
+
 func TestFreeFirstThenMalloc(t *testing.T) {
 	a := newTestArena(t)
 

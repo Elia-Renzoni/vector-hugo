@@ -176,25 +176,31 @@ func (a *Arena) Scan(target []byte) (bool, int, error) {
 }
 
 func (a *Arena) Seek(start, end int) ([]string, error) {
-	expectedRange := positions[0] - positions[len(positions)-1]
-	results := make([]string, expectedRange)
+	var results []string
 
-	for _, pos := range positions {
-		dataIndex := 0
-		scanOffset := 0
-		for scanOffset < a.memoryUsed {
-			payloadSize := int(a.mem[scanOffset])
-			payloadStart := scanOffset + 1
-			payloadEnd := payloadStart + payloadSize
+	dataIndex := 0
+	scanOffset := 0
+	for scanOffset < a.memoryUsed {
+		payloadSize := int(a.mem[scanOffset])
+		payloadStart := scanOffset + 1
+		payloadEnd := payloadStart + payloadSize
 
-			data := a.mem[payloadStart:payloadEnd]
-			dataIndex += 1
-			if dataIndex == pos {
+		data := bytes.Clone(a.mem[payloadStart:payloadEnd])
+		if end == 0 {
+			if dataIndex == start {
 				results = append(results, string(data))
+				break
 			}
-
-			scanOffset = payloadEnd
+		} else {
+			if dataIndex >= start && dataIndex <= end {
+				results = append(results, string(data))
+			} else if dataIndex > end {
+				break
+			}
 		}
+
+		dataIndex += 1
+		scanOffset = payloadEnd
 	}
 
 	return results, nil
