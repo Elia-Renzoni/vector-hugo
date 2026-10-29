@@ -655,6 +655,19 @@ func TestSeekWithMultiIndexes(t *testing.T) {
 			t.Fatalf("expected %s but got %s", expected[i], got)
 		}
 	}
+
+	results, err = a.Seek(2, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected = []string{"three", "foo", "bar", "john"}
+	for i, got := range results {
+		if expected[i] != got {
+			t.Fatalf("expected %s but got %s", expected[i], got)
+		}
+	}
+
 }
 
 func TestSeekWithSingleIndex(t *testing.T) {

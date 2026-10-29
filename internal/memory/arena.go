@@ -203,7 +203,10 @@ func (a *Arena) Seek(start, end int) ([]string, error) {
 		scanOffset = payloadEnd
 	}
 
-	return results, nil
+	if len(results) > 0 {
+		return results, nil
+	}
+	return nil, ErrValueNotFound
 }
 
 func (a *Arena) DestroyArena() {
