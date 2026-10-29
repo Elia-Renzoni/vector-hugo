@@ -6,9 +6,11 @@ import (
 )
 
 type (
-	WriteFunc func(*memory.Arena, []string) (int, error)
-	ReadFunc  func(*memory.Arena) (int, error)
-	DelFunc   func(*memory.Arena) (string, error)
+	WriteFunc     func(*memory.Arena, []string) (int, error)
+	ReadFunc      func(*memory.Arena) (int, error)
+	DelFunc       func(*memory.Arena) (string, error)
+	SeekFunc      func(*memory.Arena, int) (string, error)
+	MultiSeekFunc func(*memory.Arena, int, int) ([]string, error)
 )
 
 func GetFunc(cmd proto.ExecutableCommand) any {
@@ -25,6 +27,10 @@ func GetFunc(cmd proto.ExecutableCommand) any {
 		return DelFunc(Rpop)
 	case "llen":
 		return ReadFunc(Llen)
+	case "lindex":
+		return SeekFunc(Lindex)
+	case "lrange":
+		return MultiSeekFunc(Lrange)
 	default:
 	}
 

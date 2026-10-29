@@ -9,6 +9,7 @@ import (
 
 var (
 	ErrEmptyReturnedData = errors.New("Empty data")
+	ErrListOutOfRange    = errors.New("List out of range")
 )
 
 func Lpush(bpool *memory.Arena, data []string) (int, error) {
@@ -71,4 +72,29 @@ func Rpop(bpool *memory.Arena) (string, error) {
 func Llen(bpool *memory.Arena) (int, error) {
 	_, size, err := bpool.Scan(nil)
 	return size, err
+}
+
+func Lindex(bpool *memory.Arena, index int) (string, error) {
+	if index < 0 {
+		return "", ErrListOutOfRange
+	}
+
+	result, err := bpool.Seek(index, 0)
+	if err != nil {
+		return "", err
+	}
+
+	return result[0], nil
+}
+
+func Lrange(bpool *memory.Arena, start, end int) ([]string, error) {
+	if start < 0 || end < start || end < 0 {
+		return nil, ErrListOutOfRange
+	}
+
+	results, err := bpool.Seek(start, end)
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
 }

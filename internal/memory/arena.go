@@ -175,6 +175,40 @@ func (a *Arena) Scan(target []byte) (bool, int, error) {
 	return false, dataReaded, nil
 }
 
+func (a *Arena) Seek(start, end int) ([]string, error) {
+	var results []string
+
+	dataIndex := 0
+	scanOffset := 0
+	for scanOffset < a.memoryUsed {
+		payloadSize := int(a.mem[scanOffset])
+		payloadStart := scanOffset + 1
+		payloadEnd := payloadStart + payloadSize
+
+		data := bytes.Clone(a.mem[payloadStart:payloadEnd])
+		if end == 0 {
+			if dataIndex == start {
+				results = append(results, string(data))
+				break
+			}
+		} else {
+			if dataIndex >= start && dataIndex <= end {
+				results = append(results, string(data))
+			} else if dataIndex > end {
+				break
+			}
+		}
+
+		dataIndex += 1
+		scanOffset = payloadEnd
+	}
+
+	if len(results) > 0 {
+		return results, nil
+	}
+	return nil, ErrValueNotFound
+}
+
 func (a *Arena) DestroyArena() {
 	unix.Munmap(a.mem)
 }
