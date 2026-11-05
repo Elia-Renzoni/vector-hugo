@@ -142,9 +142,10 @@ func (c *Conf) validateOptions() error {
 	if len(c.DBOptions) == 0 {
 		c.DBOptions = make(DBOptions)
 		c.DBOptions.Set("standard", &MemoryOptions{
-			MemoryMaxBytes: 20480, // 20KB
-			PageReplacer:   true,
-			LRUPoolSize:    16,
+			MemoryMaxBytes:  20480, // 20KB
+			PageReplacer:    true,
+			LRUPoolSize:     16,
+			MemoryThreshold: 20480 * 0.75,
 		})
 
 		return nil
