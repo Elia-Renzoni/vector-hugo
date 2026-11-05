@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewArena(t *testing.T) {
-	a, err := NewArena(4096)
+	a, err := NewArena(4096, 0, 0)
 	if err != nil {
 		t.Fatalf("NewArena() error = %v", err)
 	}
@@ -744,7 +744,7 @@ func TestFreeFirstThenMalloc(t *testing.T) {
 func newTestArena(t *testing.T) *Arena {
 	t.Helper()
 
-	a, err := NewArena(4096)
+	a, err := NewArena(4096, 0, 0)
 	if err != nil {
 		t.Fatalf("NewArena() error = %v", err)
 	}

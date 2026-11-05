@@ -18,7 +18,7 @@ type Arena struct {
 	memoryToAlloc     int
 	memoryUsed        int
 	latestPushedEntry memEntry
-	lru               *lru
+	lru               *Lru
 	memoryThreshold   int
 }
 
@@ -31,7 +31,7 @@ type memEntry struct {
 func NewArena(space int, memThreshold int, lruPool int) (*Arena, error) {
 	a := &Arena{
 		memoryToAlloc:   space,
-		lru:             newLru(lruPool),
+		lru:             NewLru(lruPool),
 		memoryThreshold: memThreshold,
 	}
 
@@ -46,6 +46,17 @@ func NewArena(space int, memThreshold int, lruPool int) (*Arena, error) {
 }
 
 func (a *Arena) Malloc(data []byte, allocStyle bool) error {
+	if a.memoryUsed >= a.memoryThreshold && a.lru.Size() == 0 {
+		_, totElems, _ := a.Scan(nil)
+		a.lru.getRandomCursor(totElems)
+		a.populateLRUList()
+	}
+
+	if a.memoryUsed >= a.memoryThreshold {
+		victim := a.lru.GetVictim()
+		a.freeWithTarget(victim)
+	}
+
 	if a.memoryUsed >= a.memoryToAlloc || a.memoryUsed+len(data)+1 > a.memoryToAlloc {
 		return ErrArenaOverflow
 	}
@@ -189,11 +200,13 @@ func (a *Arena) Seek(start, end int) ([]string, error) {
 		data := bytes.Clone(a.mem[payloadStart:payloadEnd])
 		if end == 0 {
 			if dataIndex == start {
+				a.lru.Touch(data)
 				results = append(results, string(data))
 				break
 			}
 		} else {
 			if dataIndex >= start && dataIndex <= end {
+				a.lru.Touch(data)
 				results = append(results, string(data))
 			} else if dataIndex > end {
 				break
@@ -214,5 +227,6 @@ func (a *Arena) DestroyArena() {
 	unix.Munmap(a.mem)
 }
 
-func (a *Arena) loadLRUList() {
+// TODO
+func (a *Arena) populateLRUList() {
 }
