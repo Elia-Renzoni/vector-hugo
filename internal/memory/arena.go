@@ -15,10 +15,11 @@ var (
 
 type Arena struct {
 	mem               []byte
-	maxPages          int
-	pageSize          int
+	memoryToAlloc     int
 	memoryUsed        int
 	latestPushedEntry memEntry
+	lru               *lru
+	memoryThreshold   int
 }
 
 // |<header>|<payload>| ... |5|hello|
@@ -27,15 +28,15 @@ type memEntry struct {
 	payload []byte
 }
 
-func NewArena() (*Arena, error) {
+func NewArena(space int, memThreshold int, lruPool int) (*Arena, error) {
 	a := &Arena{
-		maxPages: 10,
-		pageSize: 4096, // 4KB
+		memoryToAlloc:   space,
+		lru:             newLru(lruPool),
+		memoryThreshold: memThreshold,
 	}
 
 	// alloc the necessary memory space
-	totalSpace := a.maxPages * a.pageSize
-	mem, err := unix.Mmap(-1, 0, totalSpace, unix.PROT_READ|unix.PROT_WRITE, unix.MAP_PRIVATE|unix.MAP_ANONYMOUS)
+	mem, err := unix.Mmap(-1, 0, a.memoryToAlloc, unix.PROT_READ|unix.PROT_WRITE, unix.MAP_PRIVATE|unix.MAP_ANONYMOUS)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +46,7 @@ func NewArena() (*Arena, error) {
 }
 
 func (a *Arena) Malloc(data []byte, allocStyle bool) error {
-	if a.memoryUsed >= a.maxPages*a.pageSize || a.memoryUsed+len(data)+1 > a.maxPages*a.pageSize {
+	if a.memoryUsed >= a.memoryToAlloc || a.memoryUsed+len(data)+1 > a.memoryToAlloc {
 		return ErrArenaOverflow
 	}
 
@@ -211,4 +212,7 @@ func (a *Arena) Seek(start, end int) ([]string, error) {
 
 func (a *Arena) DestroyArena() {
 	unix.Munmap(a.mem)
+}
+
+func (a *Arena) loadLRUList() {
 }

@@ -1,14 +1,17 @@
 package router
 
 import (
+	"errors"
 	"sync"
 
+	"github.com/vector-hugo/internal/conf"
 	"github.com/vector-hugo/internal/memory"
 )
 
 type ListDB struct {
-	dbs map[string]*memory.Arena
-	mu  sync.Mutex
+	dbs        map[string]*memory.Arena
+	mu         sync.Mutex
+	memOptions conf.DBOptions
 }
 
 func NewListDB() *ListDB {
@@ -30,7 +33,17 @@ func (l *ListDB) Route(dsName string, forceInsertion bool) (*memory.Arena, error
 		return nil, nil
 	}
 
-	arena, err := memory.NewArena()
+	options, err := l.memOptions.Load(dsName)
+	if errors.Is(err, conf.ErrDBNotFound) {
+		options, err = l.memOptions.Load("standard")
+	}
+
+	arena, err := memory.NewArena(
+		options.MemoryMaxBytes,
+		options.MemoryThreshold,
+		options.LRUPoolSize,
+	)
+
 	if err != nil {
 		return nil, err
 	}
