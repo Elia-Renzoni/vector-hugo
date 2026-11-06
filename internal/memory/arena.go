@@ -245,7 +245,9 @@ func (a *Arena) composeLRUList() {
 		for range delta {
 			subList, err = a.Seek(startIndex, 0)
 			if err != nil {
-				// TODO
+				// if an error is returned end the creation phase
+				// and return a partially complete LRU list
+				return
 			}
 			item := subList[0]
 			a.lru.Add([]byte(item))
