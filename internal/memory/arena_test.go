@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewArena(t *testing.T) {
-	a, err := NewArena()
+	a, err := NewArena(4096, 4096, 0)
 	if err != nil {
 		t.Fatalf("NewArena() error = %v", err)
 	}
@@ -16,7 +16,7 @@ func TestNewArena(t *testing.T) {
 		t.Fatal("arena memory is nil")
 	}
 
-	expectedSize := a.maxPages * a.pageSize
+	expectedSize := a.memoryToAlloc
 	if len(a.mem) != expectedSize {
 		t.Fatalf("len(mem) = %d, want %d", len(a.mem), expectedSize)
 	}
@@ -214,7 +214,7 @@ func TestMallocOverflow(t *testing.T) {
 	a := newTestArena(t)
 
 	// Riempiamo quasi tutta l'arena.
-	data := bytes.Repeat([]byte{'A'}, a.maxPages*a.pageSize-1)
+	data := bytes.Repeat([]byte{'A'}, a.memoryToAlloc-1)
 
 	if err := a.Malloc(data, true); err != nil {
 		t.Fatalf("first Malloc() error = %v", err)
@@ -705,6 +705,29 @@ func TestSeekWithSingleIndex(t *testing.T) {
 	}
 }
 
+func TestMallocWithLRUSemantics(t *testing.T) {
+	arena, err := NewArena(12, 6, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, value := range [][]byte{
+		[]byte("foobar"), // 6 bytes
+		[]byte("foobaa"), // 6 bytes
+	} {
+		if err := arena.Malloc(value, true); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	_, size, _ := arena.Scan(nil)
+	if size != 1 {
+		t.Fatalf("expected size %d but got %d", 1, size)
+	}
+
+	arena.DestroyArena()
+}
+
 func TestFreeFirstThenMalloc(t *testing.T) {
 	a := newTestArena(t)
 
@@ -744,7 +767,7 @@ func TestFreeFirstThenMalloc(t *testing.T) {
 func newTestArena(t *testing.T) *Arena {
 	t.Helper()
 
-	a, err := NewArena()
+	a, err := NewArena(4096, 4096, 0)
 	if err != nil {
 		t.Fatalf("NewArena() error = %v", err)
 	}

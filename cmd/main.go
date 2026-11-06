@@ -5,13 +5,14 @@ import (
 	"log"
 	"os"
 
+	c "github.com/vector-hugo/internal/conf"
 	"github.com/vector-hugo/internal/server"
 )
 
 func main() {
 	path := flag.String("path", "", "a string")
 
-	conf := NewConf()
+	conf := c.NewConf()
 	err := conf.ReadConf(*path)
 	if err != nil {
 		log.Println(err.Error())
@@ -23,6 +24,7 @@ func main() {
 		conf.GetServerPort(),
 		conf.GetConnTimeoutTime(),
 		conf.GetConnMaxDataBytes(),
+		conf.GetDBOptions(),
 	)
 
 	err = server.ListenAndServe()

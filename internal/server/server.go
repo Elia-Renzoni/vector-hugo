@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/vector-hugo/internal/conf"
 	"github.com/vector-hugo/internal/functions"
 	"github.com/vector-hugo/internal/proto"
 	"github.com/vector-hugo/internal/router"
@@ -20,13 +21,13 @@ type VectorHugo struct {
 	Dbs           *router.ListDB
 }
 
-func NewServer(ipAddr net.IP, listenPort int, deadline time.Time, maxPacketSize int) VectorHugo {
+func NewServer(ipAddr net.IP, listenPort int, deadline time.Time, maxPacketSize int, options conf.DBOptions) VectorHugo {
 	return VectorHugo{
 		Address:       ipAddr,
 		ListenPort:    listenPort,
 		ConnsDeadline: deadline,
 		MaxPacketSize: maxPacketSize,
-		Dbs:           router.NewListDB(),
+		Dbs:           router.NewListDB(options),
 	}
 }
 

@@ -10,7 +10,7 @@ import (
 
 func TestList(t *testing.T) {
 	t.Run("TestListLPUSH", func(t *testing.T) {
-		arena, err := memory.NewArena()
+		arena, err := memory.NewArena(4096, 0, 0)
 		if err != nil {
 			t.Fail()
 		}
@@ -35,7 +35,7 @@ func TestList(t *testing.T) {
 	})
 
 	t.Run("TestListRPUSH", func(t *testing.T) {
-		arena, err := memory.NewArena()
+		arena, err := memory.NewArena(4096, 0, 0)
 		if err != nil {
 			t.Fail()
 		}
@@ -65,7 +65,7 @@ func TestList(t *testing.T) {
 	})
 
 	t.Run("TestListFree", func(t *testing.T) {
-		arena, err := memory.NewArena()
+		arena, err := memory.NewArena(4096, 0, 0)
 		if err != nil {
 			t.Fail()
 		}
@@ -88,7 +88,7 @@ func TestList(t *testing.T) {
 	})
 
 	t.Run("TestListFree2", func(t *testing.T) {
-		arena, err := memory.NewArena()
+		arena, err := memory.NewArena(4096, 0, 0)
 		if err != nil {
 			t.Fail()
 		}
@@ -112,7 +112,7 @@ func TestList(t *testing.T) {
 	})
 
 	t.Run("TestListLLEN", func(t *testing.T) {
-		arena, err := memory.NewArena()
+		arena, err := memory.NewArena(4096, 0, 0)
 		if err != nil {
 			t.Fail()
 		}
@@ -136,7 +136,7 @@ func TestList(t *testing.T) {
 	})
 
 	t.Run("TestListLINDEXWithErrors", func(t *testing.T) {
-		arena, err := memory.NewArena()
+		arena, err := memory.NewArena(4096, 0, 0)
 		if err != nil {
 			t.Fail()
 		}
@@ -163,7 +163,7 @@ func TestList(t *testing.T) {
 	})
 
 	t.Run("TestListLRANGEWithErrors", func(t *testing.T) {
-		arena, err := memory.NewArena()
+		arena, err := memory.NewArena(4096, 0, 0)
 		if err != nil {
 			t.Fail()
 		}
@@ -195,7 +195,7 @@ func TestList(t *testing.T) {
 	})
 
 	t.Run("TestListLINDEX", func(t *testing.T) {
-		arena, err := memory.NewArena()
+		arena, err := memory.NewArena(4096, 0, 0)
 		if err != nil {
 			t.Fail()
 		}
@@ -221,7 +221,7 @@ func TestList(t *testing.T) {
 	})
 
 	t.Run("TestListLRANGE", func(t *testing.T) {
-		arena, err := memory.NewArena()
+		arena, err := memory.NewArena(4096, 0, 0)
 		if err != nil {
 			t.Fail()
 		}
@@ -266,7 +266,7 @@ func TestList(t *testing.T) {
 	})
 
 	t.Run("TestListRPOP", func(t *testing.T) {
-		arena, err := memory.NewArena()
+		arena, err := memory.NewArena(4096, 0, 0)
 		if err != nil {
 			t.Fail()
 		}
@@ -294,7 +294,7 @@ func TestList(t *testing.T) {
 	})
 
 	t.Run("TestListLPOP", func(t *testing.T) {
-		arena, err := memory.NewArena()
+		arena, err := memory.NewArena(4096, 0, 0)
 		if err != nil {
 			t.Fail()
 		}

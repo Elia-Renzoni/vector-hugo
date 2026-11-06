@@ -2,11 +2,13 @@ package server_test
 
 import (
 	"context"
-	"net"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
 
+	c "github.com/vector-hugo/internal/conf"
 	"github.com/vector-hugo/internal/router"
 	"github.com/vector-hugo/internal/server"
 
@@ -20,13 +22,13 @@ func setupRedisClient() *rdb.Client {
 	})
 }
 
-func setupVectorHugoServer() server.VectorHugo {
+func setupVectorHugoServer(options *c.Conf) server.VectorHugo {
 	return server.VectorHugo{
-		Address:       net.IPv4(127, 0, 0, 1),
-		ListenPort:    6379,
+		Address:       options.GetServerAddr(),
+		ListenPort:    options.GetServerPort(),
 		ConnsDeadline: time.Time{},
-		MaxPacketSize: 16000,
-		Dbs:           router.NewListDB(),
+		MaxPacketSize: options.GetConnMaxDataBytes(),
+		Dbs:           router.NewListDB(options.DBOptions),
 	}
 }
 
@@ -35,9 +37,42 @@ type (
 	CmdFetchState  func(context.Context, string) *rdb.IntCmd
 )
 
+func loadConfigurations(t *testing.T) *c.Conf {
+	var confExample = `
+host: 127.0.0.1
+port: 6379
+timeout_unit: "ss"
+timeout_value: 5
+max_bytes: 4000
+database_options:
+  myList:
+    max_memory: 1024
+    page_replacer: true
+    lru_pool_size: 24
+  myList2:
+    page_replacer: true
+`
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.yaml")
+
+	if err := os.WriteFile(path, []byte(confExample), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	conf := c.NewConf()
+	err := conf.ReadConf(path)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	return conf
+}
+
 func TestServer(t *testing.T) {
 	client := setupRedisClient()
-	server := setupVectorHugoServer()
+	opts := loadConfigurations(t)
+	server := setupVectorHugoServer(opts)
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil {

@@ -15,10 +15,11 @@ var (
 
 type Arena struct {
 	mem               []byte
-	maxPages          int
-	pageSize          int
+	memoryToAlloc     int
 	memoryUsed        int
 	latestPushedEntry memEntry
+	lru               *Lru
+	memoryThreshold   int
 }
 
 // |<header>|<payload>| ... |5|hello|
@@ -27,15 +28,15 @@ type memEntry struct {
 	payload []byte
 }
 
-func NewArena() (*Arena, error) {
+func NewArena(space int, memThreshold int, lruPool int) (*Arena, error) {
 	a := &Arena{
-		maxPages: 10,
-		pageSize: 4096, // 4KB
+		memoryToAlloc:   space,
+		lru:             NewLru(lruPool),
+		memoryThreshold: memThreshold,
 	}
 
 	// alloc the necessary memory space
-	totalSpace := a.maxPages * a.pageSize
-	mem, err := unix.Mmap(-1, 0, totalSpace, unix.PROT_READ|unix.PROT_WRITE, unix.MAP_PRIVATE|unix.MAP_ANONYMOUS)
+	mem, err := unix.Mmap(-1, 0, a.memoryToAlloc, unix.PROT_READ|unix.PROT_WRITE, unix.MAP_PRIVATE|unix.MAP_ANONYMOUS)
 	if err != nil {
 		return nil, err
 	}
@@ -45,12 +46,23 @@ func NewArena() (*Arena, error) {
 }
 
 func (a *Arena) Malloc(data []byte, allocStyle bool) error {
-	if a.memoryUsed >= a.maxPages*a.pageSize || a.memoryUsed+len(data)+1 > a.maxPages*a.pageSize {
-		return ErrArenaOverflow
-	}
-
 	if len(data) > 255 {
 		return ErrDataTooLarge
+	}
+
+	if a.memoryUsed >= a.memoryThreshold && a.lru.Size() == 0 {
+		a.composeLRUList()
+	}
+
+	if a.memoryUsed >= a.memoryThreshold {
+		victim := a.lru.GetVictim()
+		if victim != nil {
+			a.freeWithTarget(victim)
+		}
+	}
+
+	if a.memoryUsed >= a.memoryToAlloc || a.memoryUsed+len(data)+1 > a.memoryToAlloc {
+		return ErrArenaOverflow
 	}
 
 	memSegment := memEntry{
@@ -188,11 +200,13 @@ func (a *Arena) Seek(start, end int) ([]string, error) {
 		data := bytes.Clone(a.mem[payloadStart:payloadEnd])
 		if end == 0 {
 			if dataIndex == start {
+				a.lru.Touch(data)
 				results = append(results, string(data))
 				break
 			}
 		} else {
 			if dataIndex >= start && dataIndex <= end {
+				a.lru.Touch(data)
 				results = append(results, string(data))
 			} else if dataIndex > end {
 				break
@@ -211,4 +225,39 @@ func (a *Arena) Seek(start, end int) ([]string, error) {
 
 func (a *Arena) DestroyArena() {
 	unix.Munmap(a.mem)
+}
+
+func (a *Arena) composeLRUList() {
+	_, totElems, _ := a.Scan(nil)
+	if totElems == 0 {
+		return
+	}
+
+	a.lru.loadRandomCursor(totElems)
+	startIndex := a.lru.cursor
+
+	// Phase 1. try to bulk load the LRU list
+	// by calling a multi-seek operation
+	subList, err := a.Seek(startIndex, a.lru.poolSize)
+	for _, val := range subList {
+		a.lru.Add([]byte(val))
+	}
+
+	// Phase 2. if the bulk load did not succeed
+	// use a single index seek operation to load the lru list
+	if err != nil {
+		delta := len(subList) - a.lru.poolSize
+		startIndex = 0 // start fetching from the firt position
+		for range delta {
+			subList, err = a.Seek(startIndex, 0)
+			if err != nil {
+				// if an error is returned end the creation phase
+				// and return a partially complete LRU list
+				return
+			}
+			item := subList[0]
+			a.lru.Add([]byte(item))
+			startIndex += 1
+		}
+	}
 }
