@@ -10,6 +10,7 @@ import (
 type Lru struct {
 	hotEntries []*lruEntry
 	poolSize   int
+	cursor     int
 }
 
 type lruEntry struct {
@@ -24,8 +25,8 @@ func NewLru(poolSize int) *Lru {
 	}
 }
 
-func (l *Lru) getRandomCursor(upperLimit int) int {
-	return rand.IntN(upperLimit + 1)
+func (l *Lru) loadRandomCursor(upperLimit int) {
+	l.cursor = rand.IntN(upperLimit + 1)
 }
 
 func (l *Lru) Size() int {

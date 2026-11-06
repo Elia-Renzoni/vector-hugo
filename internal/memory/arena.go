@@ -47,9 +47,7 @@ func NewArena(space int, memThreshold int, lruPool int) (*Arena, error) {
 
 func (a *Arena) Malloc(data []byte, allocStyle bool) error {
 	if a.memoryUsed >= a.memoryThreshold && a.lru.Size() == 0 {
-		_, totElems, _ := a.Scan(nil)
-		a.lru.getRandomCursor(totElems)
-		a.populateLRUList()
+		a.composeLRUList()
 	}
 
 	if a.memoryUsed >= a.memoryThreshold {
@@ -227,6 +225,31 @@ func (a *Arena) DestroyArena() {
 	unix.Munmap(a.mem)
 }
 
-// TODO
-func (a *Arena) populateLRUList() {
+func (a *Arena) composeLRUList() {
+	_, totElems, _ := a.Scan(nil)
+	a.lru.loadRandomCursor(totElems)
+	startIndex := a.lru.cursor
+
+	// Phase 1. try to bulk load the LRU list
+	// by calling a multi-seek operation
+	subList, err := a.Seek(startIndex, a.lru.poolSize)
+	for _, val := range subList {
+		a.lru.Add([]byte(val))
+	}
+
+	// Phase 2. if the bulk load did not succeed
+	// use a single index seek operation to load the lru list
+	if err != nil {
+		delta := len(subList) - a.lru.poolSize
+		startIndex = 0 // start fetching from the firt position
+		for range delta {
+			subList, err = a.Seek(startIndex, 0)
+			if err != nil {
+				// TODO
+			}
+			item := subList[0]
+			a.lru.Add([]byte(item))
+			startIndex += 1
+		}
+	}
 }
