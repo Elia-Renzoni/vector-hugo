@@ -14,9 +14,10 @@ type ListDB struct {
 	memOptions conf.DBOptions
 }
 
-func NewListDB() *ListDB {
+func NewListDB(options conf.DBOptions) *ListDB {
 	return &ListDB{
-		dbs: make(map[string]*memory.Arena),
+		dbs:        make(map[string]*memory.Arena),
+		memOptions: options,
 	}
 }
 

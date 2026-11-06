@@ -26,7 +26,12 @@ func NewLru(poolSize int) *Lru {
 }
 
 func (l *Lru) loadRandomCursor(upperLimit int) {
-	l.cursor = rand.IntN(upperLimit + 1)
+	if upperLimit <= 0 {
+		l.cursor = 0
+		return
+	}
+
+	l.cursor = rand.IntN(upperLimit)
 }
 
 func (l *Lru) Size() int {
@@ -59,5 +64,8 @@ func (l *Lru) GetVictim() []byte {
 	if len(l.hotEntries) == 0 {
 		return nil
 	}
-	return l.hotEntries[0].data
+
+	victim := l.hotEntries[0].data
+	l.hotEntries = slices.Delete(l.hotEntries, 0, 1)
+	return victim
 }

@@ -24,6 +24,7 @@ func main() {
 		conf.GetServerPort(),
 		conf.GetConnTimeoutTime(),
 		conf.GetConnMaxDataBytes(),
+		conf.GetDBOptions(),
 	)
 
 	err = server.ListenAndServe()

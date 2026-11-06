@@ -46,21 +46,23 @@ func NewArena(space int, memThreshold int, lruPool int) (*Arena, error) {
 }
 
 func (a *Arena) Malloc(data []byte, allocStyle bool) error {
+	if len(data) > 255 {
+		return ErrDataTooLarge
+	}
+
 	if a.memoryUsed >= a.memoryThreshold && a.lru.Size() == 0 {
 		a.composeLRUList()
 	}
 
 	if a.memoryUsed >= a.memoryThreshold {
 		victim := a.lru.GetVictim()
-		a.freeWithTarget(victim)
+		if victim != nil {
+			a.freeWithTarget(victim)
+		}
 	}
 
 	if a.memoryUsed >= a.memoryToAlloc || a.memoryUsed+len(data)+1 > a.memoryToAlloc {
 		return ErrArenaOverflow
-	}
-
-	if len(data) > 255 {
-		return ErrDataTooLarge
 	}
 
 	memSegment := memEntry{
@@ -227,6 +229,10 @@ func (a *Arena) DestroyArena() {
 
 func (a *Arena) composeLRUList() {
 	_, totElems, _ := a.Scan(nil)
+	if totElems == 0 {
+		return
+	}
+
 	a.lru.loadRandomCursor(totElems)
 	startIndex := a.lru.cursor
 
