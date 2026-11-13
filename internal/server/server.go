@@ -102,20 +102,20 @@ func (v *VectorHugo) parseAndBindRequest(conn net.Conn, request *bytes.Buffer) (
 	lex := proto.NewLexer(request.Bytes())
 	tokens, err := lex.Scan()
 	if err != nil {
-		conn.Write([]byte(proto.BuildSimpleError("lexer", err.Error())))
+		conn.Write(proto.BuildSimpleError("lexer", err.Error()))
 		return proto.ExecutableCommand{}, err
 	}
 
 	parser := proto.NewParser(tokens)
 	ast, err := parser.Parse()
 	if err != nil {
-		conn.Write([]byte(proto.BuildSimpleError("parser", err.Error())))
+		conn.Write(proto.BuildSimpleError("parser", err.Error()))
 		return proto.ExecutableCommand{}, err
 	}
 
 	command, err := proto.BindAST(ast)
 	if err != nil {
-		conn.Write([]byte(proto.BuildSimpleError("binder", err.Error())))
+		conn.Write(proto.BuildSimpleError("binder", err.Error()))
 		return proto.ExecutableCommand{}, err
 	}
 
@@ -128,16 +128,16 @@ func (v *VectorHugo) execRequest(conn net.Conn, command proto.ExecutableCommand)
 	create := command.CommandName == "lpush" || command.CommandName == "rpush"
 	mem, err := v.Dbs.Route(command.Args[0], create)
 	if err != nil {
-		conn.Write([]byte(proto.BuildSimpleError("router", err.Error())))
+		conn.Write(proto.BuildSimpleError("router", err.Error()))
 		return
 	}
 
 	if mem == nil {
 		switch command.CommandName {
 		case "lpop", "rpop":
-			conn.Write([]byte(proto.BuildNULLValue())) // nil
+			conn.Write(proto.BuildNULLValue()) // nil
 		default: // llen, lpushx
-			conn.Write([]byte(proto.BuildInteger(0)))
+			conn.Write(proto.BuildInteger(0))
 		}
 		return
 	}
@@ -161,7 +161,7 @@ func (v *VectorHugo) execRequest(conn net.Conn, command proto.ExecutableCommand)
 		start, err = strconv.Atoi(command.Args[1:][0])
 		end, err = strconv.Atoi(command.Args[1:][1])
 		if err != nil {
-			conn.Write([]byte(proto.BuildSimpleError("cmd", err.Error())))
+			conn.Write(proto.BuildSimpleError("cmd", err.Error()))
 			return
 		}
 
@@ -169,7 +169,7 @@ func (v *VectorHugo) execRequest(conn net.Conn, command proto.ExecutableCommand)
 	case functions.SeekFunc:
 		index, err := strconv.Atoi(command.Args[1:][0])
 		if err != nil {
-			conn.Write([]byte(proto.BuildSimpleError("cmd", err.Error())))
+			conn.Write(proto.BuildSimpleError("cmd", err.Error()))
 			return
 
 		}
@@ -179,23 +179,23 @@ func (v *VectorHugo) execRequest(conn net.Conn, command proto.ExecutableCommand)
 	}
 
 	if err != nil {
-		conn.Write([]byte(proto.BuildSimpleError("cmd", err.Error())))
+		conn.Write(proto.BuildSimpleError("cmd", err.Error()))
 		return
 	}
 
 	if resultData != "" {
-		conn.Write([]byte(proto.BuildBulkString(resultData)))
+		conn.Write(proto.BuildBulkString(resultData))
 		return
 	}
 
 	if len(resultList) > 0 {
-		conn.Write([]byte(proto.BuildArray(resultList)))
+		conn.Write(proto.BuildArray(resultList))
 		return
 	}
 
 	if n == -1 {
-		conn.Write([]byte(proto.BuildSimpleString("OK")))
+		conn.Write(proto.BuildSimpleString("OK"))
 	} else {
-		conn.Write([]byte(proto.BuildInteger(n)))
+		conn.Write(proto.BuildInteger(n))
 	}
 }
