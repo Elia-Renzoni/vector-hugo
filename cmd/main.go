@@ -11,6 +11,7 @@ import (
 
 func main() {
 	path := flag.String("path", "", "a string")
+	flag.Parse()
 
 	conf := c.NewConf()
 	err := conf.ReadConf(*path)
@@ -22,7 +23,7 @@ func main() {
 	server := server.NewServer(
 		conf.GetServerAddr(),
 		conf.GetServerPort(),
-		conf.GetConnTimeoutTime(),
+		conf.GetConnTimeout(),
 		conf.GetConnMaxDataBytes(),
 		conf.GetDBOptions(),
 	)

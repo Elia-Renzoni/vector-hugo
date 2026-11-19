@@ -87,16 +87,16 @@ func (c Conf) GetDBOptions() DBOptions {
 	return c.DBOptions
 }
 
-func (c Conf) GetConnTimeoutTime() time.Time {
+func (c Conf) GetConnTimeout() time.Duration {
 	timeVal := time.Duration(c.ConnTimeoutTimeValue)
 	switch c.ConnTimeoutTimeUnit {
 	case SS:
-		return time.Now().Add(timeVal * time.Second)
+		return timeVal * time.Second
 	case MS:
-		return time.Now().Add(timeVal * time.Millisecond)
+		return timeVal * time.Millisecond
 	}
 
-	return time.Time{}
+	return 0
 }
 
 func (c Conf) GetConnMaxDataBytes() int {
