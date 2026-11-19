@@ -16,16 +16,16 @@ import (
 type VectorHugo struct {
 	Address       net.IP
 	ListenPort    int
-	ConnsDeadline time.Time
-	MaxPacketSize int // 16kb
+	ConnTimeout   time.Duration // 0 means no deadline
+	MaxPacketSize int           // 16kb
 	Dbs           *router.ListDB
 }
 
-func NewServer(ipAddr net.IP, listenPort int, deadline time.Time, maxPacketSize int, options conf.DBOptions) VectorHugo {
+func NewServer(ipAddr net.IP, listenPort int, connTimeout time.Duration, maxPacketSize int, options conf.DBOptions) VectorHugo {
 	return VectorHugo{
 		Address:       ipAddr,
 		ListenPort:    listenPort,
-		ConnsDeadline: deadline,
+		ConnTimeout:   connTimeout,
 		MaxPacketSize: maxPacketSize,
 		Dbs:           router.NewListDB(options),
 	}
@@ -59,7 +59,9 @@ func (v VectorHugo) serve(conn net.Conn) {
 	)
 
 	defer conn.Close()
-	conn.SetDeadline(v.ConnsDeadline)
+	if v.ConnTimeout > 0 {
+		conn.SetDeadline(time.Now().Add(v.ConnTimeout))
+	}
 
 	for {
 		n, err := conn.Read(data)

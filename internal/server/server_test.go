@@ -26,7 +26,7 @@ func setupVectorHugoServer(options *c.Conf) server.VectorHugo {
 	return server.VectorHugo{
 		Address:       options.GetServerAddr(),
 		ListenPort:    options.GetServerPort(),
-		ConnsDeadline: time.Time{},
+		ConnTimeout:   0,
 		MaxPacketSize: options.GetConnMaxDataBytes(),
 		Dbs:           router.NewListDB(options.DBOptions),
 	}
